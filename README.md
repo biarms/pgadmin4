@@ -1,13 +1,11 @@
 # biarms/pgadmin4
 
-[![build status](https://gitlab.com/biarms/pgadmin4/badges/master/build.svg)](https://gitlab.com/biarms/pgadmin4/commits/master)
-
 [![build status](https://api.travis-ci.org/biarms/pgadmin4.svg?branch=master)](https://travis-ci.org/biarms/pgadmin4)
 
+[PGAdmin](https://pgadmin.org) is an web-based UI administration plateform for PostgreSQL open source database.
 
-
-
-A docker image for running [pgadmin](https://pgadmin.org), modified to work on an arm(hf) based system.
+This git repo build a docker image for running [PGAdmin](https://pgadmin.org) on an arm(hf) based system.
+Once done, the result will be pushed on [dockerhub](https://hub.docker.com/r/biarms/pgadmin4/).
 
 Inspired from [simonqbs/arm-pgadmin4](https://github.com/simonqbs-dockerfiles/arm-pgadmin4), that what himself inspired by [thaJeztah pgadmin4 image](https://github.com/thaJeztah/pgadmin4-docker).
   
