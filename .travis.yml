@@ -1,0 +1,24 @@
+sudo: required
+services:
+  - docker
+language: bash
+env:
+  global:
+    - IMAGE_NAME=biarms/pgadmin4
+
+before_install:
+  - docker version
+  - docker run --rm --privileged multiarch/qemu-user-static:register --reset
+
+script: 
+  - BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  - VCS_REF=$(git rev-parse --short HEAD)
+  - docker build --build-arg VCS_REF=$VCS_REF --build-arg BUILD_DATE=$BUILD_DATE -t $IMAGE_NAME:build .
+
+after_success:
+  - >
+    if [ "$TRAVIS_BRANCH" == "master" ]; then
+      docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+      docker tag $IMAGE_NAME:build $IMAGE_NAME:latest
+      docker push $IMAGE_NAME:latest
+    fi  
