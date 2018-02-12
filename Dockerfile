@@ -1,12 +1,12 @@
 # Inspired from https://github.com/simonqbs-dockerfiles/arm-pgadmin4
 FROM alpine:3.7
 
+ENV PYTHONDONTWRITEBYTECODE=1
+
 RUN \
 	apk add --no-cache python postgresql-dev
 
-ENV PGADMIN_VERSION=2.1 \
-    PYTHONDONTWRITEBYTECODE=1
-
+ARG PGADMIN_VERSION
 ARG VCS_REF
 ARG BUILD_DATE
 
