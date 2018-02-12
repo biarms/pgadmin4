@@ -11,6 +11,9 @@ env:
     - PGADMIN_VERSION=2.1
 
 before_install:
+  - echo "PGADMIN_VERSION: $PGADMIN_VERSION"
+  - echo "TRAVIS_BRANCH: $TRAVIS_BRANCH"
+  - echo "DOCKER_USERNAME: $DOCKER_USERNAME"
   - docker version
   - docker run --rm --privileged multiarch/qemu-user-static:register --reset
 
@@ -24,5 +27,6 @@ after_success:
     if [ "$TRAVIS_BRANCH" == "master" ]; then
       docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
       docker tag $IMAGE_NAME:build $IMAGE_NAME:latest
+      docker tag $IMAGE_NAME:build $IMAGE_NAME:$PGADMIN_VERSION
       docker push $IMAGE_NAME:latest
     fi  
