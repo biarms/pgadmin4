@@ -18,8 +18,6 @@ before_install:
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
   - docker version
   - docker run --rm --privileged multiarch/qemu-user-static:register --reset
-
-script: bash
   # get qemu-arm-static binary
   - >
     mkdir tmp &&
@@ -27,24 +25,26 @@ script: bash
     curl -L -o qemu-arm-static.tar.gz https://github.com/multiarch/qemu-user-static/releases/download/v2.9.1-1/x86_64_qemu-arm-static.tar.gz &&
     tar xzf qemu-arm-static.tar.gz &&
     popd
-  # When https://github.com/docker/cli/pull/138 merged branch will be part of an official release:
-  # docker manifest create biarms/mysql biarms/mysql-arm
-  # docker manifest annotate biarms/mysql biarms/mysql-arm --os linux --arch arm
-  # docker manifest push new-list-ref-name
-  #
-  # In the mean time, I use: https://github.com/estesp/manifest-tool
-  - >
-    sudo wget -O /usr/local/bin manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-arm64 &&
-    sudo chmod +x /usr/local/bin/manifest-tool &&
-  	echo "image: $(IMAGE_NAME):$(PGADMIN_VERSION)" > manifest.yaml &&
-  	echo "manifests:" >> manifest.yaml &&
-  	echo "  - image: $(IMAGE_NAME):linux-arm-$(PGADMIN_VERSION) " >> manifest.yaml &&
-  	echo "    platform: " >> manifest.yaml &&
-  	echo "      architecture: arm " >> manifest.yaml &&
-  	echo "      os: linux " >> manifest.yaml &&
-  	echo "   #TODO: armv6l, armv7l, aarch64" >> manifest.yaml &&
-  	cat manifest.yaml
-  	# rm manifest.yaml
+
+script: bash
+#  # When https://github.com/docker/cli/pull/138 merged branch will be part of an official release:
+#  # docker manifest create biarms/mysql biarms/mysql-arm
+#  # docker manifest annotate biarms/mysql biarms/mysql-arm --os linux --arch arm
+#  # docker manifest push new-list-ref-name
+#  #
+#  # In the mean time, I use: https://github.com/estesp/manifest-tool
+#  - >
+#    sudo wget -O /usr/local/bin manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-arm64 &&
+#    sudo chmod +x /usr/local/bin/manifest-tool &&
+#  	echo "image: $(IMAGE_NAME):$(PGADMIN_VERSION)" > manifest.yaml &&
+#  	echo "manifests:" >> manifest.yaml &&
+#  	echo "  - image: $(IMAGE_NAME):linux-arm-$(PGADMIN_VERSION) " >> manifest.yaml &&
+#  	echo "    platform: " >> manifest.yaml &&
+#  	echo "      architecture: arm " >> manifest.yaml &&
+#  	echo "      os: linux " >> manifest.yaml &&
+#  	echo "   #TODO: armv6l, armv7l, aarch64" >> manifest.yaml &&
+#  	cat manifest.yaml
+#  	# rm manifest.yaml
   - BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
   - VCS_REF=$(git rev-parse --short HEAD)
   - docker build --build-arg VCS_REF=$VCS_REF --build-arg BUILD_DATE=$BUILD_DATE --build-arg PGADMIN_VERSION=$PGADMIN_VERSION -t $IMAGE_NAME:build .
