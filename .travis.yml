@@ -34,8 +34,8 @@ script:
   #  #
   #  # In the mean time, I use: https://github.com/estesp/manifest-tool
   - >
-    sudo wget -O /usr/local/bin manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-arm64 &&
-    sudo chmod +x /usr/local/bin/manifest-tool
+    wget -O manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-arm64 &&
+    chmod +x manifest-tool
   # - >
   #  	echo "image: $(IMAGE_NAME):$(PGADMIN_VERSION)" > manifest.yaml &&
   #  	echo "manifests:" >> manifest.yaml &&
@@ -59,10 +59,10 @@ after_success:
       docker tag $IMAGE_NAME:build $IMAGE_NAME:$PGADMIN_VERSION
       docker push $IMAGE_NAME:latest
       docker push $IMAGE_NAME:$PGADMIN_VERSION
-      # manifest-tool push from-spec manifest.yaml
+      # ./manifest-tool push from-spec manifest.yaml
     else
       echo "Don't building master branch, but $TRAVIS_BRANCH. Push a beta version."
       docker tag $IMAGE_NAME:build $IMAGE_NAME:$PGADMIN_VERSION-beta
       docker push $IMAGE_NAME:$PGADMIN_VERSION-beta
-      # manifest-tool push from-spec manifest.yaml
+      # ./manifest-tool push from-spec manifest.yaml
     fi
