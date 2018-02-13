@@ -36,15 +36,15 @@ script:
   - >
     wget -O manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-arm64 &&
     chmod +x manifest-tool
-  # - >
-  #  	echo "image: $(IMAGE_NAME):$(PGADMIN_VERSION)" > manifest.yaml &&
+  - >
+    echo "image: $(IMAGE_NAME):$(PGADMIN_VERSION)" > manifest.yaml &&
+    cat manifest.yaml
   #  	echo "manifests:" >> manifest.yaml &&
   #  	echo "  - image: $(IMAGE_NAME):linux-arm-$(PGADMIN_VERSION) " >> manifest.yaml &&
   #  	echo "    platform: " >> manifest.yaml &&
   #  	echo "      architecture: arm " >> manifest.yaml &&
   #  	echo "      os: linux " >> manifest.yaml &&
   #  	echo "   #TODO: armv6l, armv7l, aarch64" >> manifest.yaml &&
-  #  	cat manifest.yaml
   #  	# rm manifest.yaml
   - BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
   - VCS_REF=$(git rev-parse --short HEAD)
