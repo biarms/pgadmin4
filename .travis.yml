@@ -44,7 +44,8 @@ before_install:
     chmod +x manifest-tool &&
     pwd &&
     ls -l &&
-    $(pwd)/manifest-tool --version
+    ls -l $(pwd)/manifest-tool
+    # $(pwd)/manifest-tool --version
 
 script:
   - >
