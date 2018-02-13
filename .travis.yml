@@ -60,8 +60,7 @@ script:
   - VCS_REF=$(git rev-parse --short HEAD)
   - docker build --build-arg VCS_REF=$VCS_REF --build-arg BUILD_DATE=${BUILD_DATE} --build-arg PGADMIN_VERSION=${IMAGE_VERSION} -t ${IMAGE_NAME}:build .
 
-#after_success:
-deploy:
+after_success:
   - >
     docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
     docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:${IMAGE_VERSION}
