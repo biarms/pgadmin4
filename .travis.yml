@@ -45,7 +45,7 @@ before_install:
     pwd &&
     ls -l &&
     ls -l $(pwd)/manifest-tool
-    # $(pwd)/manifest-tool --version
+    $(pwd)/manifest-tool --version
 
 script:
   - >
