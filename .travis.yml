@@ -64,8 +64,8 @@ script:
 after_success:
   - >
     docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" &&
-    docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:${IMAGE_VERSION} &&
-    docker push ${IMAGE_NAME}:${IMAGE_VERSION} &&
+    docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:linux-arm-${IMAGE_VERSION} &&
+    docker push ${IMAGE_NAME}:linux-arm-${IMAGE_VERSION} &&
     $(pwd)/manifest-tool push from-spec manifest.yaml &&
     if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
       echo "Building master branch. Let's also push the 'latest' tag on docker hub" &&
