@@ -8,7 +8,7 @@ language: bash
 env:
   global:
     - IMAGE_NAME=biarms/pgadmin4
-    - PGADMIN_VERSION=2.1
+    - IMAGE_VERSION=2.1
 
 # From https://docs.travis-ci.com/user/customizing-the-build/
 # install: true
@@ -37,7 +37,7 @@ script:
     wget -O manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-arm64 &&
     chmod +x manifest-tool
   - >
-    echo "image: $(IMAGE_NAME):$(PGADMIN_VERSION)" > manifest.yaml &&
+    echo "image: ${IMAGE_NAME}:${IMAGE_VERSION}" > manifest.yaml &&
     cat manifest.yaml
   #  	echo "manifests:" >> manifest.yaml &&
   #  	echo "  - image: $(IMAGE_NAME):linux-arm-$(PGADMIN_VERSION) " >> manifest.yaml &&
@@ -48,21 +48,22 @@ script:
   #  	# rm manifest.yaml
   - BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
   - VCS_REF=$(git rev-parse --short HEAD)
-  - docker build --build-arg VCS_REF=$VCS_REF --build-arg BUILD_DATE=$BUILD_DATE --build-arg PGADMIN_VERSION=$PGADMIN_VERSION -t $IMAGE_NAME:build .
+  - docker build --build-arg VCS_REF=$VCS_REF --build-arg BUILD_DATE=${BUILD_DATE} --build-arg PGADMIN_VERSION=${IMAGE_VERSION} -t ${IMAGE_NAME}:build .
 
 after_success:
   - >
-    if [[ "$TRAVIS_BRANCH" == "master" ]]; then
-      echo "Building master branch. Let's push the new build on dockerhub"
-      docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-      docker tag $IMAGE_NAME:build $IMAGE_NAME:latest
-      docker tag $IMAGE_NAME:build $IMAGE_NAME:$PGADMIN_VERSION
-      docker push $IMAGE_NAME:latest
-      docker push $IMAGE_NAME:$PGADMIN_VERSION
+    docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+    if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
+      echo "Building master branch. Let's push the new build on docker hub"
+      docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:latest
+      docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:${IMAGE_VERSION}
+      docker push ${IMAGE_NAME}:latest
+      docker push ${IMAGE_NAME}:${IMAGE_VERSION}
       # ./manifest-tool push from-spec manifest.yaml
     else
       echo "Don't building master branch, but $TRAVIS_BRANCH. Push a beta version."
-      docker tag $IMAGE_NAME:build $IMAGE_NAME:$PGADMIN_VERSION-beta
-      docker push $IMAGE_NAME:$PGADMIN_VERSION-beta
+      docker tag ${IMAGE_NAME}:build $IMAGE_NAME:${IMAGE_VERSION}-beta
+      docker push ${IMAGE_NAME}:${IMAGE_VERSION}-beta
       # ./manifest-tool push from-spec manifest.yaml
     fi
+    ./manifest-tool --version
