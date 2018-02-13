@@ -18,6 +18,8 @@ before_install:
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
   - docker version
   - docker run --rm --privileged multiarch/qemu-user-static:register --reset
+
+script: bash
   # get qemu-arm-static binary
   - >
     mkdir tmp &&
@@ -43,7 +45,6 @@ before_install:
   	echo "   #TODO: armv6l, armv7l, aarch64" >> manifest.yaml &&
   	cat manifest.yaml
   	# rm manifest.yaml
-script: bash
   - BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
   - VCS_REF=$(git rev-parse --short HEAD)
   - docker build --build-arg VCS_REF=$VCS_REF --build-arg BUILD_DATE=$BUILD_DATE --build-arg PGADMIN_VERSION=$PGADMIN_VERSION -t $IMAGE_NAME:build .
