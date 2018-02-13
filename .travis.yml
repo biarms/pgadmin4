@@ -14,8 +14,8 @@ env:
 # install: true
 
 before_install:
-  - echo "PGADMIN_VERSION=$PGADMIN_VERSION - TRAVIS_BRANCH=$TRAVIS_BRANCH - DOCKER_USERNAME=$DOCKER_USERNAME"
-  - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+  - echo "PGADMIN_VERSION=${IMAGE_VERSION} - TRAVIS_BRANCH=${TRAVIS_BRANCH} - DOCKER_USERNAME=${DOCKER_USERNAME}"
+  - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
   - docker version
   - docker run --rm --privileged multiarch/qemu-user-static:register --reset
   # get qemu-arm-static binary
@@ -25,22 +25,24 @@ before_install:
     curl -L -o qemu-arm-static.tar.gz https://github.com/multiarch/qemu-user-static/releases/download/v2.9.1-1/x86_64_qemu-arm-static.tar.gz &&
     tar xzf qemu-arm-static.tar.gz &&
     popd
-
-script:
-  #  # When https://github.com/docker/cli/pull/138 merged branch will be part of an official release:
-  #  # docker manifest create biarms/mysql biarms/mysql-arm
-  #  # docker manifest annotate biarms/mysql biarms/mysql-arm --os linux --arch arm
-  #  # docker manifest push new-list-ref-name
-  #  #
-  #  # In the mean time, I use: https://github.com/estesp/manifest-tool
+  # When https://github.com/docker/cli/pull/138 merged branch will be part of an official release:
+  # docker manifest create biarms/mysql biarms/mysql-arm
+  # docker manifest annotate biarms/mysql biarms/mysql-arm --os linux --arch arm
+  # docker manifest push new-list-ref-name
+  #
+  # In the mean time, we use: https://github.com/estesp/manifest-tool
   - >
     wget -O manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-arm64 &&
-    chmod +x manifest-tool
+    chmod +x manifest-tool &&
+    ./manifest-tool --version
+
+script:
   - >
     echo "image: ${IMAGE_NAME}:${IMAGE_VERSION}" > manifest.yaml &&
+    echo "manifests:" >> manifest.yaml &&
+    echo "  - image: ${IMAGE_NAME}:linux-arm-${IMAGE_VERSION} " >> manifest.yaml &&
     cat manifest.yaml
-  #  	echo "manifests:" >> manifest.yaml &&
-  #  	echo "  - image: $(IMAGE_NAME):linux-arm-$(PGADMIN_VERSION) " >> manifest.yaml &&
+  #
   #  	echo "    platform: " >> manifest.yaml &&
   #  	echo "      architecture: arm " >> manifest.yaml &&
   #  	echo "      os: linux " >> manifest.yaml &&
@@ -66,4 +68,3 @@ after_success:
       docker push ${IMAGE_NAME}:${IMAGE_VERSION}-beta
       # ./manifest-tool push from-spec manifest.yaml
     fi
-    ./manifest-tool --version
