@@ -44,7 +44,7 @@ before_install:
     chmod +x manifest-tool &&
     pwd &&
     ls -l &&
-    ./manifest-tool --version
+    $(pwd)/manifest-tool --version
 
 script:
   - >
@@ -65,7 +65,7 @@ after_success:
     docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
     docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:${IMAGE_VERSION}
     docker push ${IMAGE_NAME}:${IMAGE_VERSION}
-    ./manifest-tool push from-spec manifest.yaml
+    $(pwd)/manifest-tool push from-spec manifest.yaml
     if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
       echo "Building master branch. Let's also push the 'latest' tag on docker hub"
       docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:latest
