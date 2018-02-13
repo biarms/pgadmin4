@@ -8,22 +8,30 @@ language: bash
 env:
   global:
     - IMAGE_NAME=biarms/pgadmin4
-    - IMAGE_VERSION=2.1
+    - PGADMIN_VERSION=2.1
 
 # From https://docs.travis-ci.com/user/customizing-the-build/
 # install: true
 
 before_install:
-  - echo "PGADMIN_VERSION=${IMAGE_VERSION} - TRAVIS_BRANCH=${TRAVIS_BRANCH} - DOCKER_USERNAME=${DOCKER_USERNAME}"
+  - >
+    if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
+      echo "We are building the master branch: version is official version."
+      export IMAGE_VERSION="${PGADMIN_VERSION}"
+    else
+      echo "We are not building the master branch. Building a beta version then"
+      export IMAGE_VERSION="${PGADMIN_VERSION}-beta"
+    fi
+  - echo "IMAGE_VERSION=${IMAGE_VERSION} - TRAVIS_BRANCH=${TRAVIS_BRANCH} - DOCKER_USERNAME=${DOCKER_USERNAME}"
   - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
   - docker version
   - docker run --rm --privileged multiarch/qemu-user-static:register --reset
   # get qemu-arm-static binary
   - >
-    mkdir tmp &&
-    pushd tmp &&
-    curl -L -o qemu-arm-static.tar.gz https://github.com/multiarch/qemu-user-static/releases/download/v2.9.1-1/x86_64_qemu-arm-static.tar.gz &&
-    tar xzf qemu-arm-static.tar.gz &&
+    mkdir tmp
+    pushd tmp
+    curl -L -o qemu-arm-static.tar.gz https://github.com/multiarch/qemu-user-static/releases/download/v2.9.1-1/x86_64_qemu-arm-static.tar.gz
+    tar xzf qemu-arm-static.tar.gz
     popd
   # When https://github.com/docker/cli/pull/138 merged branch will be part of an official release:
   # docker manifest create biarms/mysql biarms/mysql-arm
@@ -41,30 +49,24 @@ script:
     echo "image: ${IMAGE_NAME}:${IMAGE_VERSION}" > manifest.yaml &&
     echo "manifests:" >> manifest.yaml &&
     echo "  - image: ${IMAGE_NAME}:linux-arm-${IMAGE_VERSION} " >> manifest.yaml &&
+    echo "    platform: " >> manifest.yaml &&
+    echo "      architecture: arm " >> manifest.yaml &&
+    echo "      os: linux " >> manifest.yaml &&
+    echo "   #TODO: armv6l, armv7l, aarch64" >> manifest.yaml &&
     cat manifest.yaml
-  #
-  #  	echo "    platform: " >> manifest.yaml &&
-  #  	echo "      architecture: arm " >> manifest.yaml &&
-  #  	echo "      os: linux " >> manifest.yaml &&
-  #  	echo "   #TODO: armv6l, armv7l, aarch64" >> manifest.yaml &&
-  #  	# rm manifest.yaml
   - BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
   - VCS_REF=$(git rev-parse --short HEAD)
   - docker build --build-arg VCS_REF=$VCS_REF --build-arg BUILD_DATE=${BUILD_DATE} --build-arg PGADMIN_VERSION=${IMAGE_VERSION} -t ${IMAGE_NAME}:build .
 
-after_success:
+#after_success:
+deploy:
   - >
     docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+    docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:${IMAGE_VERSION}
+    docker push ${IMAGE_NAME}:${IMAGE_VERSION}
+    ./manifest-tool push from-spec manifest.yaml
     if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
-      echo "Building master branch. Let's push the new build on docker hub"
+      echo "Building master branch. Let's also push the 'latest' tag on docker hub"
       docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:latest
-      docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:${IMAGE_VERSION}
       docker push ${IMAGE_NAME}:latest
-      docker push ${IMAGE_NAME}:${IMAGE_VERSION}
-      # ./manifest-tool push from-spec manifest.yaml
-    else
-      echo "Don't building master branch, but $TRAVIS_BRANCH. Push a beta version."
-      docker tag ${IMAGE_NAME}:build $IMAGE_NAME:${IMAGE_VERSION}-beta
-      docker push ${IMAGE_NAME}:${IMAGE_VERSION}-beta
-      # ./manifest-tool push from-spec manifest.yaml
     fi
