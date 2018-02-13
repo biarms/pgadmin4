@@ -10,6 +10,9 @@ env:
     - IMAGE_NAME=biarms/pgadmin4
     - PGADMIN_VERSION=2.1
 
+# From https://docs.travis-ci.com/user/customizing-the-build/
+install: true
+
 before_install:
   - echo "PGADMIN_VERSION=$PGADMIN_VERSION - TRAVIS_BRANCH=$TRAVIS_BRANCH - DOCKER_USERNAME=$DOCKER_USERNAME"
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
@@ -40,7 +43,7 @@ before_install:
   	echo "   #TODO: armv6l, armv7l, aarch64" >> manifest.yaml &&
   	cat manifest.yaml
   	# rm manifest.yaml
-script: 
+script: bash
   - BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
   - VCS_REF=$(git rev-parse --short HEAD)
   - docker build --build-arg VCS_REF=$VCS_REF --build-arg BUILD_DATE=$BUILD_DATE --build-arg PGADMIN_VERSION=$PGADMIN_VERSION -t $IMAGE_NAME:build .
