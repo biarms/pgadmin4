@@ -16,10 +16,10 @@ env:
 before_install:
   - >
     if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
-      echo "We are building the master branch: version is official version."
+      echo "We are building the master branch: version is official version." &&
       export IMAGE_VERSION="${PGADMIN_VERSION}"
     else
-      echo "We are not building the master branch. Building a beta version then"
+      echo "We are not building the master branch. Building a beta version then" &&
       export IMAGE_VERSION="${PGADMIN_VERSION}-beta"
     fi
   - echo "IMAGE_VERSION=${IMAGE_VERSION} - TRAVIS_BRANCH=${TRAVIS_BRANCH} - DOCKER_USERNAME=${DOCKER_USERNAME}"
@@ -45,7 +45,7 @@ before_install:
     pwd &&
     ls -l &&
     ls -l $(pwd)/manifest-tool
-  # $(pwd)/manifest-tool --version
+    # $(pwd)/manifest-tool --version
 
 script:
   - >
@@ -63,12 +63,12 @@ script:
 
 after_success:
   - >
-    docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
-    docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:${IMAGE_VERSION}
-    docker push ${IMAGE_NAME}:${IMAGE_VERSION}
-    # $(pwd)/manifest-tool push from-spec manifest.yaml
+    docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" &&
+    docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:${IMAGE_VERSION} &&
+    docker push ${IMAGE_NAME}:${IMAGE_VERSION} &&
+    # $(pwd)/manifest-tool push from-spec manifest.yaml &&
     if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
-      echo "Building master branch. Let's also push the 'latest' tag on docker hub"
-      docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:latest
+      echo "Building master branch. Let's also push the 'latest' tag on docker hub" &&
+      docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:latest &&
       docker push ${IMAGE_NAME}:latest
     fi
