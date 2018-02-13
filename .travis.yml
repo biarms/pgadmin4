@@ -39,14 +39,15 @@ before_install:
   # docker manifest push new-list-ref-name
   #
   # In the mean time, we use: https://github.com/estesp/manifest-tool
+  # https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-arm64 &&
   - >
     pushd tmp &&
-    curl -L -o manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-arm64 &&
+    curl -L -o manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-386 &&
     chmod +x manifest-tool &&
     pwd &&
     ls -l &&
     ls -l $(pwd)/manifest-tool &&
-    $(pwd)/manifest-tool --version &&
+    bash -c '$(pwd)/manifest-tool --version' &&
     popd
 
 script:
@@ -69,7 +70,7 @@ after_success:
     docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:linux-arm-${IMAGE_VERSION} &&
     docker push ${IMAGE_NAME}:linux-arm-${IMAGE_VERSION} &&
     ls -l $(pwd)/tmp/manifest-t* &&
-    $(pwd)/tmp/manifest-tool push from-spec manifest.yaml &&
+    bash -c '$(pwd)/tmp/manifest-tool push from-spec manifest.yaml' &&
     if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
       echo "Building master branch. Let's also push the 'latest' tag on docker hub" &&
       docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:latest &&
