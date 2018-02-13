@@ -40,39 +40,45 @@ before_install:
   #
   # In the mean time, we use: https://github.com/estesp/manifest-tool
   # https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-arm64 &&
-  - >
-    pushd tmp &&
-    curl -L -o manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-386 &&
-    chmod +x manifest-tool &&
-    pwd &&
-    ls -l &&
-    ls -l $(pwd)/manifest-tool &&
-    bash -c '$(pwd)/manifest-tool --version' &&
-    popd
+  - pushd tmp && pwd
+  - pwd
+  - curl -L -o manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-386
+  - chmod +x manifest-tool
+  - pwd
+  - ls -l
+  - ls -l $(pwd)/manifest-tool
+  - bash -c '$(pwd)/manifest-tool --version'
+  - popd
 
 script:
   - >
-    echo "image: ${IMAGE_NAME}:${IMAGE_VERSION}" > manifest.yaml &&
-    echo "manifests:" >> manifest.yaml &&
-    echo "  - image: ${IMAGE_NAME}:linux-arm-${IMAGE_VERSION} " >> manifest.yaml &&
-    echo "    platform: " >> manifest.yaml &&
-    echo "      architecture: arm " >> manifest.yaml &&
-    echo "      os: linux " >> manifest.yaml &&
-    echo "   #TODO: armv6l, armv7l, aarch64" >> manifest.yaml &&
-    cat manifest.yaml
+    echo "image: ${IMAGE_NAME}:${IMAGE_VERSION}" > manifest.yaml
+  - >
+    echo "manifests:" >> manifest.yaml
+  - >
+    echo "  - image: ${IMAGE_NAME}:linux-arm-${IMAGE_VERSION} " >> manifest.yaml
+  - >
+    echo "    platform: " >> manifest.yaml
+  - >
+    echo "      architecture: arm " >> manifest.yaml
+  - >
+    echo "      os: linux " >> manifest.yaml
+  - >
+    echo "   #TODO: armv6l, armv7l, aarch64" >> manifest.yaml
+  - cat manifest.yaml
   - BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
   - VCS_REF=$(git rev-parse --short HEAD)
   - docker build --build-arg VCS_REF=$VCS_REF --build-arg BUILD_DATE=${BUILD_DATE} --build-arg PGADMIN_VERSION=${PGADMIN_VERSION} -t ${IMAGE_NAME}:build .
 
 after_success:
+  - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+  - docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:linux-arm-${IMAGE_VERSION}
+  - docker push ${IMAGE_NAME}:linux-arm-${IMAGE_VERSION}
+  - ls -l $(pwd)/tmp/manifest-t*
+  - bash -c '$(pwd)/tmp/manifest-tool push from-spec manifest.yaml'
   - >
-    docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" &&
-    docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:linux-arm-${IMAGE_VERSION} &&
-    docker push ${IMAGE_NAME}:linux-arm-${IMAGE_VERSION} &&
-    ls -l $(pwd)/tmp/manifest-t* &&
-    bash -c '$(pwd)/tmp/manifest-tool push from-spec manifest.yaml' &&
     if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
-      echo "Building master branch. Let's also push the 'latest' tag on docker hub" &&
-      docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:latest &&
+      echo "Building master branch. Let's also push the 'latest' tag on docker hub"
+      docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:latest
       docker push ${IMAGE_NAME}:latest
     fi
