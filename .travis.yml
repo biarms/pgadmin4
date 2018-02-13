@@ -38,5 +38,7 @@ after_success:
       docker push $IMAGE_NAME:latest
       docker push $IMAGE_NAME:$PGADMIN_VERSION
     else
-      echo "Don't building master branch, but $TRAVIS_BRANCH. Skipping push on dockerhub."
+      echo "Don't building master branch, but $TRAVIS_BRANCH. Push a beta version."
+      docker tag $IMAGE_NAME:build $IMAGE_NAME:$PGADMIN_VERSION-beta
+      docker push $IMAGE_NAME:$PGADMIN_VERSION-beta
     fi
