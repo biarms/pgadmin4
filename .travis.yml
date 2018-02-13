@@ -11,7 +11,7 @@ env:
     - PGADMIN_VERSION=2.1
 
 # From https://docs.travis-ci.com/user/customizing-the-build/
-install: true
+# install: true
 
 before_install:
   - echo "PGADMIN_VERSION=$PGADMIN_VERSION - TRAVIS_BRANCH=$TRAVIS_BRANCH - DOCKER_USERNAME=$DOCKER_USERNAME"
@@ -26,7 +26,7 @@ before_install:
     tar xzf qemu-arm-static.tar.gz &&
     popd
 
-script: bash
+script:
   #  # When https://github.com/docker/cli/pull/138 merged branch will be part of an official release:
   #  # docker manifest create biarms/mysql biarms/mysql-arm
   #  # docker manifest annotate biarms/mysql biarms/mysql-arm --os linux --arch arm
