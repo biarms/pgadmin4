@@ -40,8 +40,10 @@ before_install:
   #
   # In the mean time, we use: https://github.com/estesp/manifest-tool
   - >
-    wget -O manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-arm64 &&
-    chmod +x manifest-tool &&
+    wget -O manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-arm64
+    chmod +x manifest-tool
+    pwd
+    ls -l
     ./manifest-tool --version
 
 script:
