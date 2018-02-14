@@ -1,6 +1,6 @@
 # Inspired from https://github.com/simonqbs-dockerfiles/arm-pgadmin4
-# FROM alpine:3.7
-FROM hypriot/rpi-alpine:3.6
+FROM alpine:3.7
+# FROM hypriot/rpi-alpine:3.6
 
 # COPY tmp/qemu-arm-static /usr/bin/qemu-arm-static
 
