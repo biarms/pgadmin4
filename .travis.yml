@@ -15,13 +15,14 @@ env:
 
 before_install:
   - BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  - BUILD_NUMBER=${TRAVIS_BUILD_NUMBER}
   - >
     if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
       echo "We are building the master branch: version is official version."
       export IMAGE_VERSION="${PGADMIN_VERSION}"
     else
       echo "We are not building the master branch. Building a beta version then"
-      export IMAGE_VERSION="${PGADMIN_VERSION}-beta-${BUILD_DATE}"
+      export IMAGE_VERSION="${PGADMIN_VERSION}-beta#${BUILD_NUMBER}-${BUILD_DATE}"
     fi
   - echo "IMAGE_VERSION=${IMAGE_VERSION} - TRAVIS_BRANCH=${TRAVIS_BRANCH} - DOCKER_USERNAME=${DOCKER_USERNAME}"
   - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
