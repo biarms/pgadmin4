@@ -14,13 +14,14 @@ env:
 # install: true
 
 before_install:
+  - BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
   - >
     if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
       echo "We are building the master branch: version is official version." &&
       export IMAGE_VERSION="${PGADMIN_VERSION}"
     else
       echo "We are not building the master branch. Building a beta version then" &&
-      export IMAGE_VERSION="${PGADMIN_VERSION}-beta"
+      export IMAGE_VERSION="${PGADMIN_VERSION}-beta-${BUILD_DATE}"
     fi
   - echo "IMAGE_VERSION=${IMAGE_VERSION} - TRAVIS_BRANCH=${TRAVIS_BRANCH} - DOCKER_USERNAME=${DOCKER_USERNAME}"
   - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
@@ -66,7 +67,6 @@ script:
   - >
     echo "   #TODO: armv6l, armv7l, aarch64" >> manifest.yaml
   - cat manifest.yaml
-  - BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
   - VCS_REF=$(git rev-parse --short HEAD)
   - docker build --build-arg VCS_REF=$VCS_REF --build-arg BUILD_DATE=${BUILD_DATE} --build-arg PGADMIN_VERSION=${PGADMIN_VERSION} -t ${IMAGE_NAME}:build .
 
