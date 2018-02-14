@@ -1,8 +1,7 @@
 # Inspired from https://github.com/simonqbs-dockerfiles/arm-pgadmin4
-# FROM alpine:3.7
+# To be able to build 'arm' images on Travis (which is x64 based), it is mandatory to explicitly reference the arm32v6/alpine:3.7
+# instead of 'alpine:3.7'
 FROM arm32v6/alpine:3.7
-# FROM hypriot/rpi-alpine:3.6
-
 COPY tmp/qemu-arm-static /usr/bin/qemu-arm-static
 
 ENV PYTHONDONTWRITEBYTECODE=1
