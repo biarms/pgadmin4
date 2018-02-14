@@ -1,7 +1,8 @@
 # Inspired from https://github.com/simonqbs-dockerfiles/arm-pgadmin4
-FROM alpine:3.7
+# FROM alpine:3.7
+FROM hypriot/rpi-alpine:3.6
 
-COPY tmp/qemu-arm-static /usr/bin/qemu-arm-static
+# COPY tmp/qemu-arm-static /usr/bin/qemu-arm-static
 
 ENV PYTHONDONTWRITEBYTECODE=1
 
