@@ -8,7 +8,7 @@ language: bash
 env:
   global:
     - IMAGE_NAME=biarms/pgadmin4
-    - PGADMIN_VERSION=2.1
+    - VERSION=3.4
 
 # From https://docs.travis-ci.com/user/customizing-the-build/
 # install: true
@@ -17,12 +17,14 @@ before_install:
   - BUILD_DATE=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
   - BUILD_NUMBER=${TRAVIS_BUILD_NUMBER}
   - >
-    if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
+    if [[ "${TRAVIS_BRANCH}" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
       echo "We are building the master branch: version is official version."
-      export IMAGE_VERSION="${PGADMIN_VERSION}"
+      IMAGE_VERSION="${VERSION}"
+      BETA_MODE="false"
     else
-      echo "We are not building the master branch. Building a beta version then"
-      export IMAGE_VERSION="${PGADMIN_VERSION}-beta-${BUILD_NUMBER}"
+      echo "We are not building the master branch (or we are in a PR mode). Building a beta version then"
+      IMAGE_VERSION="${VERSION}-beta-${BUILD_NUMBER}"
+      BETA_MODE="true"
     fi
   - echo "IMAGE_VERSION=${IMAGE_VERSION} - TRAVIS_BRANCH=${TRAVIS_BRANCH} - DOCKER_USERNAME=${DOCKER_USERNAME}"
   - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
@@ -63,7 +65,7 @@ script:
     echo "   #TODO: armv6l, armv7l, aarch64" >> manifest.yaml
   - cat manifest.yaml
   - VCS_REF=$(git rev-parse --short HEAD)
-  - docker build --build-arg VCS_REF=$VCS_REF --build-arg BUILD_DATE=${BUILD_DATE} --build-arg PGADMIN_VERSION=${PGADMIN_VERSION} -t ${IMAGE_NAME}:build .
+  - docker build --build-arg VCS_REF=$VCS_REF --build-arg BUILD_DATE=${BUILD_DATE} --build-arg PGADMIN_VERSION=${VERSION} -t ${IMAGE_NAME}:build .
 
 after_success:
   - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
@@ -71,7 +73,7 @@ after_success:
   - docker push ${IMAGE_NAME}:linux-arm-${IMAGE_VERSION}
   - bash -c './manifest-tool push from-spec manifest.yaml'
   - >
-    if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
+    if [[ "${BETA_MODE}" == "false" ]]; then
       echo "Building master branch. Let's also push the 'latest' tag on docker hub"
       docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:latest
       docker push ${IMAGE_NAME}:latest
