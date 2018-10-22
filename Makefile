@@ -52,7 +52,7 @@ build: check
 
 test: check
 	uname -a
-	docker run --rm $(DOCKER_IMAGE_NAME):build
+	# docker run --rm $(DOCKER_IMAGE_NAME):build
 	docker run --rm $(DOCKER_IMAGE_NAME):build uname -a
 
 tag: check
@@ -98,17 +98,17 @@ push-manifest-core: check
 	echo "    platform:" >> manifest.yaml
 	echo "      architecture: arm" >> manifest.yaml
 	echo "      os: linux" >> manifest.yaml
-	echo "      variant: xxx" >> manifest.yaml
-	echo "  - image: ${DOCKER_REGISTRY}${DOCKER_IMAGE_NAME}:linux-arm32v7-${DOCKER_IMAGE_VERSION}" >> manifest.yaml
-	echo "    platform:" >> manifest.yaml
-	echo "      architecture: arm" >> manifest.yaml
-	echo "      os: linux" >> manifest.yaml
-	echo "      variant: yyy" >> manifest.yaml
+	echo "      variant: v6" >> manifest.yaml
+	#echo "  - image: ${DOCKER_REGISTRY}${DOCKER_IMAGE_NAME}:linux-arm32v7-${DOCKER_IMAGE_VERSION}" >> manifest.yaml
+	#echo "    platform:" >> manifest.yaml
+	#echo "      architecture: arm" >> manifest.yaml
+	#echo "      os: linux" >> manifest.yaml
+	#echo "      variant: yyy" >> manifest.yaml
 	echo "  - image: ${DOCKER_REGISTRY}${DOCKER_IMAGE_NAME}:linux-arm64v8-${DOCKER_IMAGE_VERSION}" >> manifest.yaml
 	echo "    platform:" >> manifest.yaml
 	echo "      architecture: arm64" >> manifest.yaml
 	echo "      os: linux" >> manifest.yaml
-	echo "      variant: zzz" >> manifest.yaml
+	echo "      variant: v8" >> manifest.yaml
 	manifest-tool push from-spec manifest.yaml
 
 push-manifest-first-line: check
