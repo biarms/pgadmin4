@@ -8,7 +8,7 @@ language: bash
 env:
   global:
     - IMAGE_NAME=biarms/pgadmin4
-    - VERSION=2.1
+    - VERSION=3.4
 
 # From https://docs.travis-ci.com/user/customizing-the-build/
 # install: true
