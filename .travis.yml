@@ -20,10 +20,11 @@ matrix:
           env:
            - BUILD_ARCH=arm32v6
            - QEMU_ARCH=arm
-        - os: linux
-          env:
-           - BUILD_ARCH=arm32v7
-           - QEMU_ARCH=arm
+        # Must be commented, as arm32v7/alpine:3.7 does not exist :(
+        # - os: linux
+        #   env:
+        #    - BUILD_ARCH=arm32v7
+        #    - QEMU_ARCH=arm
         - os: linux
           env:
            - BUILD_ARCH=arm64v8
