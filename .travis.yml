@@ -3,19 +3,35 @@ sudo: required
 services:
   - docker
 
-language: bash
-
-env:
-  global:
-    - IMAGE_NAME=biarms/pgadmin4
-    - VERSION=3.4
-
 # From https://docs.travis-ci.com/user/customizing-the-build/
 # install: true
 
+# 'bash' is not a travis language. See https://docs.travis-ci.com/user/languages/
+language: generic
+
+# env:
+#   global:
+#     - IMAGE_NAME=biarms/pgadmin4
+#     - VERSION=3.4
+
+matrix:
+    include:
+        - os: linux
+          env:
+           - BUILD_ARCH=arm32v6
+           - QEMU_ARCH=arm
+        # Must be commented, as arm32v7/alpine:3.7 does not exist :(
+        # - os: linux
+        #   env:
+        #    - BUILD_ARCH=arm32v7
+        #    - QEMU_ARCH=arm
+        - os: linux
+          env:
+           - BUILD_ARCH=arm64v8
+           - QEMU_ARCH=aarch64
+
 before_install:
-  - BUILD_DATE=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
-  - BUILD_NUMBER=${TRAVIS_BUILD_NUMBER}
+  - VERSION=$(grep "ENV VERSION" Dockerfile | sed 's/.*=//')
   - >
     if [[ "${TRAVIS_BRANCH}" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
       echo "We are building the master branch: version is official version."
@@ -23,19 +39,12 @@ before_install:
       BETA_MODE="false"
     else
       echo "We are not building the master branch (or we are in a PR mode). Building a beta version then"
-      IMAGE_VERSION="${VERSION}-beta-${BUILD_NUMBER}"
+      IMAGE_VERSION="${VERSION}-beta-${TRAVIS_BUILD_NUMBER}"
       BETA_MODE="true"
     fi
-  - echo "IMAGE_VERSION=${IMAGE_VERSION} - TRAVIS_BRANCH=${TRAVIS_BRANCH} - DOCKER_USERNAME=${DOCKER_USERNAME}"
   - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
   - docker version
   - docker run --rm --privileged multiarch/qemu-user-static:register --reset
-  # get qemu-arm-static binary
-  - mkdir tmp
-  - pushd tmp
-  - curl -L -o qemu-arm-static.tar.gz https://github.com/multiarch/qemu-user-static/releases/download/v2.9.1-1/x86_64_qemu-arm-static.tar.gz
-  - tar xzf qemu-arm-static.tar.gz
-  - popd
   # When https://github.com/docker/cli/pull/138 merged branch will be part of an official release:
   # docker manifest create biarms/mysql biarms/mysql-arm
   # docker manifest annotate biarms/mysql biarms/mysql-arm --os linux --arch arm
@@ -43,38 +52,21 @@ before_install:
   #
   # In the mean time, we use: https://github.com/estesp/manifest-tool
   # https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-arm64 &&
-  - curl -L -o manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-386
-  - chmod +x manifest-tool
-  - ls -l manifest-tool
-  - bash -c './manifest-tool --version'
+  - curl -L -o manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.8.0/manifest-tool-linux-386 &&
+    chmod +x manifest-tool &&
+    ls -l manifest-tool &&
+    export PATH="$(pwd):$PATH" &&
+    bash -c 'manifest-tool --version'
 
 script:
-  - >
-    echo "image: ${IMAGE_NAME}:${IMAGE_VERSION}" > manifest.yaml
-  - >
-    echo "manifests:" >> manifest.yaml
-  - >
-    echo "  - image: ${IMAGE_NAME}:linux-arm-${IMAGE_VERSION} " >> manifest.yaml
-  - >
-    echo "    platform: " >> manifest.yaml
-  - >
-    echo "      architecture: arm " >> manifest.yaml
-  - >
-    echo "      os: linux " >> manifest.yaml
-  - >
-    echo "   #TODO: armv6l, armv7l, aarch64" >> manifest.yaml
-  - cat manifest.yaml
-  - VCS_REF=$(git rev-parse --short HEAD)
-  - docker build --build-arg VCS_REF=$VCS_REF --build-arg BUILD_DATE=${BUILD_DATE} --build-arg PGADMIN_VERSION=${VERSION} -t ${IMAGE_NAME}:build .
+  - export IMAGE_VERSION
+  - echo "BUILD_ARCH=${BUILD_ARCH} - QEMU_ARCH=${QEMU_ARCH} - IMAGE_VERSION=${IMAGE_VERSION} - TRAVIS_BRANCH=${TRAVIS_BRANCH} - DOCKER_USERNAME=${DOCKER_USERNAME}"
+  - make build test
 
 after_success:
-  - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
-  - docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:linux-arm-${IMAGE_VERSION}
-  - docker push ${IMAGE_NAME}:linux-arm-${IMAGE_VERSION}
-  - bash -c './manifest-tool push from-spec manifest.yaml'
+  - make tag push
   - >
     if [[ "${BETA_MODE}" == "false" ]]; then
       echo "Building master branch. Let's also push the 'latest' tag on docker hub"
-      docker tag ${IMAGE_NAME}:build ${IMAGE_NAME}:latest
-      docker push ${IMAGE_NAME}:latest
+      make push-latest
     fi
