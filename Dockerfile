@@ -18,7 +18,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 RUN \
 	apk add --no-cache python postgresql-dev
 
-ENV VERSION=3.4
+ENV VERSION=2.1
 
 RUN \
 	apk add --no-cache --virtual .build-deps python-dev py-pip alpine-sdk \
