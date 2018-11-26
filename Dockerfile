@@ -3,7 +3,7 @@ ARG BUILD_ARCH
 FROM biarms/qemu-bin:latest as qemu-bin-ref
 
 # To be able to build 'arm' images on Travis (which is x64 based), it is mandatory to explicitly reference the ${BUILD_ARCH} image
-FROM ${BUILD_ARCH}/alpine:3.7
+FROM ${BUILD_ARCH}/alpine:3.8
 # ARG BUILD_ARCH line was duplicated on purpose: "An ARG declared before a FROM is outside of a build stage, so it can’t be used in any instruction after a FROM."
 # See https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
 ARG BUILD_ARCH
