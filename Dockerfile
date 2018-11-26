@@ -18,20 +18,21 @@ ENV PYTHONDONTWRITEBYTECODE=1
 RUN \
 	apk add --no-cache python postgresql-dev
 
-ENV VERSION=2.1
+ENV VERSION=3.0
 
-RUN \
-	apk add --no-cache --virtual .build-deps python-dev py-pip alpine-sdk \
-	&& echo "https://ftp.postgresql.org/pub/pgadmin/pgadmin4/v${VERSION}/pip/pgadmin4-${VERSION}-py2.py3-none-any.whl" > requirements.txt \
-	&& pip install --no-cache-dir -r requirements.txt \
-	&& rm requirements.txt \
-	&& apk del .build-deps
+# Install postgresql tools for backup/restore
+RUN apk add --no-cache postgresql \
+ && cp /usr/bin/psql /usr/bin/pg_dump /usr/bin/pg_dumpall /usr/bin/pg_restore /usr/local/bin/ \
+ && apk del postgresql
 
-RUN \
-	addgroup -g 50 -S pgadmin \
-	&& adduser -D -S -h /pgadmin -s /sbin/nologin -u 1000 -G pgadmin pgadmin \
-	&& mkdir -p /pgadmin/config /pgadmin/storage \
- 	&& chown -R 1000:50 /pgadmin
+RUN apk add --no-cache alpine-sdk postgresql-dev \
+ && pip install --upgrade pip \
+ && echo "https://ftp.postgresql.org/pub/pgadmin/pgadmin4/v${PGADMIN_VERSION}/pip/pgadmin4-${PGADMIN_VERSION}-py2.py3-none-any.whl" | pip install --no-cache-dir -r /dev/stdin \
+ && apk del alpine-sdk \
+ && addgroup -g 50 -S pgadmin \
+ && adduser -D -S -h /pgadmin -s /sbin/nologin -u 1000 -G pgadmin pgadmin \
+ && mkdir -p /pgadmin/config /pgadmin/storage \
+ && chown -R 1000:50 /pgadmin
 
 EXPOSE 5050
 
