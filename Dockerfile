@@ -16,7 +16,7 @@ COPY --from=qemu-bin-ref /usr/bin/qemu-${QEMU_ARCH}-static /usr/bin/qemu-${QEMU_
 ENV PYTHONDONTWRITEBYTECODE=1
 
 RUN \
-	apk add --no-cache python py-pip postgresql-dev
+	apk add --no-cache python python-dev py-pip postgresql-dev
 
 ENV VERSION=3.0
 
