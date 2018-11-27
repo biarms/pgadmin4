@@ -23,7 +23,7 @@ RUN apk add --no-cache postgresql \
  && cp /usr/bin/psql /usr/bin/pg_dump /usr/bin/pg_dumpall /usr/bin/pg_restore /usr/local/bin/ \
  && apk del postgresql
 
-ENV VERSION=3.1
+ENV VERSION=3.0
 
 RUN apk add --no-cache alpine-sdk postgresql-dev \
  && pip install --upgrade pip \
