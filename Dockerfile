@@ -3,7 +3,7 @@ ARG BUILD_ARCH
 FROM biarms/qemu-bin:latest as qemu-bin-ref
 
 # To be able to build 'arm' images on Travis (which is x64 based), it is mandatory to explicitly reference the ${BUILD_ARCH} image
-FROM ${BUILD_ARCH}/alpine:3.7
+FROM ${BUILD_ARCH}/alpine:3.8
 # ARG BUILD_ARCH line was duplicated on purpose: "An ARG declared before a FROM is outside of a build stage, so it can’t be used in any instruction after a FROM."
 # See https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
 ARG BUILD_ARCH
@@ -16,22 +16,23 @@ COPY --from=qemu-bin-ref /usr/bin/qemu-${QEMU_ARCH}-static /usr/bin/qemu-${QEMU_
 ENV PYTHONDONTWRITEBYTECODE=1
 
 RUN \
-	apk add --no-cache python postgresql-dev
+	apk add --no-cache python python-dev py-pip postgresql-dev
 
-ENV VERSION=2.1
+# Install postgresql tools for backup/restore
+RUN apk add --no-cache postgresql \
+ && cp /usr/bin/psql /usr/bin/pg_dump /usr/bin/pg_dumpall /usr/bin/pg_restore /usr/local/bin/ \
+ && apk del postgresql
 
-RUN \
-	apk add --no-cache --virtual .build-deps python-dev py-pip alpine-sdk \
-	&& echo "https://ftp.postgresql.org/pub/pgadmin/pgadmin4/v${VERSION}/pip/pgadmin4-${VERSION}-py2.py3-none-any.whl" > requirements.txt \
-	&& pip install --no-cache-dir -r requirements.txt \
-	&& rm requirements.txt \
-	&& apk del .build-deps
+ENV VERSION=3.0
 
-RUN \
-	addgroup -g 50 -S pgadmin \
-	&& adduser -D -S -h /pgadmin -s /sbin/nologin -u 1000 -G pgadmin pgadmin \
-	&& mkdir -p /pgadmin/config /pgadmin/storage \
- 	&& chown -R 1000:50 /pgadmin
+RUN apk add --no-cache alpine-sdk postgresql-dev \
+ && pip install --upgrade pip \
+ && echo "https://ftp.postgresql.org/pub/pgadmin/pgadmin4/v${VERSION}/pip/pgadmin4-${VERSION}-py2.py3-none-any.whl" | pip install --no-cache-dir -r /dev/stdin \
+ && apk del alpine-sdk \
+ && addgroup -g 50 -S pgadmin \
+ && adduser -D -S -h /pgadmin -s /sbin/nologin -u 1000 -G pgadmin pgadmin \
+ && mkdir -p /pgadmin/config /pgadmin/storage \
+ && chown -R 1000:50 /pgadmin
 
 EXPOSE 5050
 
