@@ -18,7 +18,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 RUN \
 	apk add --no-cache python python-dev py-pip postgresql-dev
 
-ENV VERSION=3.6
+ENV VERSION=3.5
 
 # Install postgresql tools for backup/restore
 RUN apk add --no-cache postgresql \
