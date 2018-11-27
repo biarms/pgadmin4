@@ -18,12 +18,12 @@ ENV PYTHONDONTWRITEBYTECODE=1
 RUN \
 	apk add --no-cache python python-dev py-pip postgresql-dev
 
-ENV VERSION=3.5
-
 # Install postgresql tools for backup/restore
 RUN apk add --no-cache postgresql \
  && cp /usr/bin/psql /usr/bin/pg_dump /usr/bin/pg_dumpall /usr/bin/pg_restore /usr/local/bin/ \
  && apk del postgresql
+
+ENV VERSION=3.4
 
 RUN apk add --no-cache alpine-sdk postgresql-dev \
  && pip install --upgrade pip \
