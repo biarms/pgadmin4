@@ -3,7 +3,7 @@ ARG BUILD_ARCH
 FROM biarms/qemu-bin:latest as qemu-bin-ref
 
 # To be able to build 'arm' images on Travis (which is x64 based), it is mandatory to explicitly reference the ${BUILD_ARCH} image
-FROM ${BUILD_ARCH}/alpine:3.8
+FROM ${BUILD_ARCH}/alpine:3.9
 # ARG BUILD_ARCH line was duplicated on purpose: "An ARG declared before a FROM is outside of a build stage, so it can’t be used in any instruction after a FROM."
 # See https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
 ARG BUILD_ARCH
@@ -16,14 +16,14 @@ COPY --from=qemu-bin-ref /usr/bin/qemu-${QEMU_ARCH}-static /usr/bin/qemu-${QEMU_
 ENV PYTHONDONTWRITEBYTECODE=1
 
 RUN \
-	apk add --no-cache python python-dev py-pip postgresql-dev
+	apk add --no-cache python python-dev py-pip postgresql-dev libffi libffi-dev
 
 # Install postgresql tools for backup/restore
 RUN apk add --no-cache postgresql \
  && cp /usr/bin/psql /usr/bin/pg_dump /usr/bin/pg_dumpall /usr/bin/pg_restore /usr/local/bin/ \
  && apk del postgresql
 
-ENV VERSION=3.0
+ENV VERSION=4.5
 
 RUN apk add --no-cache alpine-sdk postgresql-dev \
  && pip install --upgrade pip \
