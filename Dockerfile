@@ -1,6 +1,7 @@
 ARG BUILD_ARCH
+# This code is no more needed, according to https://github.com/multiarch/qemu-user-static#multiarch-compatible-images-deprecated
 # Perform a multi-stage build as explained at https://docs.docker.com/v17.09/engine/userguide/eng-image/multistage-build/#name-your-build-stages
-FROM biarms/qemu-bin:latest as qemu-bin-ref
+# FROM biarms/qemu-bin:latest as qemu-bin-ref
 
 # To be able to build 'arm' images on Travis (which is x64 based), it is mandatory to explicitly reference the ${BUILD_ARCH} image
 FROM ${BUILD_ARCH}/alpine:3.7
