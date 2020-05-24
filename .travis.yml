@@ -37,4 +37,4 @@ jobs:
     - name: "buildx"
       env: MAKE_TARGET="buildx"
 script:
-  - travis_wait 120 BETA_VERSION=${BUILD_BETA_VERSION} ${MAKE_TARGET}
+  - BETA_VERSION=${BUILD_BETA_VERSION} ${MAKE_TARGET}
