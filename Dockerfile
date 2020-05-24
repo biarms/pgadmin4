@@ -5,8 +5,8 @@ ARG BUILD_ARCH
 
 # To be able to build 'arm' images on Travis (which is x64 based), it is mandatory to explicitly reference the ${BUILD_ARCH} image
 # FROM ${BUILD_ARCH}python:2-alpine3.8
-# FROM ${BUILD_ARCH}python:2-alpine3.11
-FROM ${BUILD_ARCH}python:3.6.10-alpine3.11
+FROM ${BUILD_ARCH}python:2-alpine3.11
+# FROM ${BUILD_ARCH}python:3.6.10-alpine3.11
 # To find latest alpine version, see https://hub.docker.com/_/alpine?tab=description
 
 # create a non-privileged user to use at runtime

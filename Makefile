@@ -193,7 +193,19 @@ run-smoke-tests: prepare
 	docker run --rm "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" /bin/echo "Success." | grep "Success"
 	docker run --rm "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" uname -a
 
-test-one-image: build-one-image run-smoke-tests
+pgadmin4-tc-01: prepare
+	# Search for 'Starting pgAdmin 4. Please navigate to http://0.0.0.0:5050 in your browser.' in the logs
+	# Test Case 1: test that the server starts
+	docker stop pgadmin4-tc-01 || true
+	docker rm pgadmin4-tc-01 || true
+	docker create --name pgadmin4-tc-01 ${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}
+	docker start pgadmin4-tc-01
+	while ! (docker logs pgadmin4-tc-01 2>&1 | grep 'Starting pgAdmin 4. Please navigate' | grep '5050') ; do sleep 1; done
+	# docker run --rm -it --link mysql-test ${DOCKER_IMAGE_NAME} bash -c 'sleep 1 && mysql -h mysql-test -u testuser -ptestpassword -e "show variables;" testdb'
+	docker stop pgadmin4-tc-01
+	docker rm pgadmin4-tc-01
+
+test-one-image: build-one-image run-smoke-tests pgadmin4-tc-01
 
 push-one-image: check docker-login-if-possible
 	# push only is 'DOCKER_USERNAME' (and hopefully DOCKER_PASSWORD) are set:
