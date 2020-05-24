@@ -4,7 +4,6 @@ ARG BUILD_ARCH
 # FROM biarms/qemu-bin:latest as qemu-bin-ref
 
 # To be able to build 'arm' images on Travis (which is x64 based), it is mandatory to explicitly reference the ${BUILD_ARCH} image
-# FROM ${BUILD_ARCH}python:2-alpine3.8
 FROM ${BUILD_ARCH}python:2-alpine3.11
 # FROM ${BUILD_ARCH}python:3.6.10-alpine3.11
 # To find latest alpine version, see https://hub.docker.com/_/alpine?tab=description
@@ -31,13 +30,15 @@ RUN apk add --no-cache alpine-sdk linux-headers \
  && echo "https://ftp.postgresql.org/pub/pgadmin/pgadmin4/v${PGADMIN_VERSION}/pip/pgadmin4-${PGADMIN_VERSION}-py2.py3-none-any.whl" | pip install --no-cache-dir -r /dev/stdin \
  && apk del alpine-sdk linux-headers
 
-EXPOSE 5050
-
+# Next line is important because it is parsed by the Makefile...
+ARG PYTHON_VERSION=2.7
 COPY LICENSE config_distro.py /usr/local/lib/python2.7/site-packages/pgadmin4/
 
 USER pgadmin:pgadmin
 CMD ["python", "./usr/local/lib/python2.7/site-packages/pgadmin4/pgAdmin4.py"]
 VOLUME /pgadmin/
+
+EXPOSE 5050
 
 ARG BUILD_DATE
 ARG VCS_REF

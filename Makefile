@@ -15,7 +15,8 @@ DOCKER_PASSWORD ?=
 # BETA_VERSION: Nothing, or '-beta-123'
 BETA_VERSION ?=
 DOCKER_IMAGE_NAME = biarms/pgadmin4
-DOCKER_IMAGE_VERSION=$(shell grep "ENV PGADMIN_VERSION" Dockerfile | sed 's/.*=//';)
+DOCKER_IMAGE_VERSION = $(shell grep "ENV PGADMIN_VERSION" Dockerfile | sed 's/.*=//';)
+PYTHON_VERSION = $(shell grep "ARG PYTHON_VERSION" Dockerfile | sed 's/.*=//';)
 DOCKER_IMAGE_TAGNAME = ${DOCKER_REGISTRY}${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}${BETA_VERSION}
 # See https://www.gnu.org/software/make/manual/html_node/Shell-Function.html
 # BUILD_DATE=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -192,6 +193,17 @@ run-smoke-tests: prepare
 	# Smoke tests:
 	docker run --rm "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" /bin/echo "Success." | grep "Success"
 	docker run --rm "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" uname -a
+	docker run --rm "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" cat /etc/os-release
+	docker run --rm "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" cat /etc/os-release | grep 'VERSION_ID=3.11'
+	# docker run --rm "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" cat /etc/os-release | grep 'VERSION_ID=3.11.6'
+	docker run --rm "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" python --version
+	# Mandatory: Dockerfile expect this:
+	docker run --rm "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" python 2>&1 --version | grep "${PYTHON_VERSION}"
+	echo "Nice to have"
+	# Just for doc purposes ;)
+ 	# | grep '3.6.10'
+	docker run --rm "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" pip --version
+ 	# | grep 'pip 20.1.1'
 
 pgadmin4-tc-01: prepare
 	# Search for 'Starting pgAdmin 4. Please navigate to http://0.0.0.0:5050 in your browser.' in the logs
@@ -200,7 +212,21 @@ pgadmin4-tc-01: prepare
 	docker rm pgadmin4-tc-01 || true
 	docker create --name pgadmin4-tc-01 ${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}
 	docker start pgadmin4-tc-01
-	while ! (docker logs pgadmin4-tc-01 2>&1 | grep 'Starting pgAdmin 4. Please navigate' | grep '5050') ; do sleep 1; done
+	# This TC implements a fail fast algorithm: the container as 10 second to start and 120 to be ready...
+	i=0 ;\
+	timeout=10 ;\
+	while ! (docker logs pgadmin4-tc-01 2>&1 | grep 'Starting pgAdmin 4. Please navigate' | grep '5050') ; do \
+       i=$$[$$i+1] ;\
+       if (docker logs pgadmin4-tc-01 2>&1 | grep -q 'Configuring authentication for DESKTOP mode') ; then \
+		  timeout=120 ;\
+       fi ;\
+       if [ $$i -gt $$timeout ]; then \
+         docker logs pgadmin4-tc-01 ;\
+         echo "TC-01 failed" ;\
+         exit -101 ;\
+       fi ;\
+       sleep 1 ;\
+	done
 	# docker run --rm -it --link mysql-test ${DOCKER_IMAGE_NAME} bash -c 'sleep 1 && mysql -h mysql-test -u testuser -ptestpassword -e "show variables;" testdb'
 	docker stop pgadmin4-tc-01
 	docker rm pgadmin4-tc-01
