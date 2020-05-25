@@ -103,7 +103,7 @@ buildx-prepare: install-qemu check-buildx
 	@ echo "DOCKER_IMAGE_TAGNAME: ${DOCKER_IMAGE_TAGNAME}"
 
 #.PHONY: checkout
-#checkout: check-binaries
+checkout: check-binaries
 #	git clone https://github.com/postgres/pgadmin4 git-src || true
 #	cd git-src && git checkout tags/$(GITHUB_TAG)
 
