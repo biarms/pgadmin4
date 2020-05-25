@@ -50,11 +50,11 @@ workflows:
       #- test-arm64v8
       #- test-amd64
       - publish:
-          requires:
-            - test-arm32v6
-            - test-arm32v7
-            - test-arm64v8
-            - test-amd64
+          #requires:
+          #  - test-arm32v6
+          #  - test-arm32v7
+          #  - test-arm64v8
+          #  - test-amd64
           filters:
             branches:
               only: master
