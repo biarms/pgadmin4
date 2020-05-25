@@ -1,0 +1,60 @@
+version: 2.1
+
+jobs:
+  test-arm32v6:
+    docker:
+      - image: biarms/docker-toolbox:0.0.2
+    steps:
+      - setup_remote_docker:
+          version: 19.03.8 # Max supported version was found on https://circleci.com/docs/2.0/building-docker-images/
+      - checkout
+      - run: BETA_VERSION='-beta-circleci' make test-arm32v6
+  test-arm32v7:
+    docker:
+      - image: biarms/docker-toolbox:0.0.2
+    steps:
+      - setup_remote_docker:
+          version: 19.03.8 # Max supported version was found on https://circleci.com/docs/2.0/building-docker-images/
+      - checkout
+      - run: BETA_VERSION='-beta-circleci' make test-arm32v7
+  test-arm64v8:
+    docker:
+      - image: biarms/docker-toolbox:0.0.2
+    steps:
+      - setup_remote_docker:
+          version: 19.03.8 # Max supported version was found on https://circleci.com/docs/2.0/building-docker-images/
+      - checkout
+      - run: BETA_VERSION='-beta-circleci' make test-arm64v8
+  test-amd64:
+    docker:
+      - image: biarms/docker-toolbox:0.0.2
+    steps:
+      - setup_remote_docker:
+          version: 19.03.8 # Max supported version was found on https://circleci.com/docs/2.0/building-docker-images/
+      - checkout
+      - run: BETA_VERSION='-beta-circleci' make test-amd64
+  publish:
+    docker:
+      - image: biarms/docker-toolbox:0.0.2
+    steps:
+      - setup_remote_docker:
+          version: 19.03.8 # Max supported version was found on https://circleci.com/docs/2.0/building-docker-images/
+      - checkout
+      - run: make buildx
+workflows:
+  version: 2
+  tests_and_publish:
+    jobs:
+      - test-arm32v6
+      - test-arm32v7
+      - test-arm64v8
+      - test-amd64
+      - publish:
+          requires:
+            - test-arm32v6
+            - test-arm32v7
+            - test-arm64v8
+            - test-amd64
+          filters:
+            branches:
+              only: master

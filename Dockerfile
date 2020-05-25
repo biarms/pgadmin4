@@ -1,46 +1,44 @@
 ARG BUILD_ARCH
+# This code is no more needed, according to https://github.com/multiarch/qemu-user-static#multiarch-compatible-images-deprecated
 # Perform a multi-stage build as explained at https://docs.docker.com/v17.09/engine/userguide/eng-image/multistage-build/#name-your-build-stages
-FROM biarms/qemu-bin:latest as qemu-bin-ref
+# FROM biarms/qemu-bin:latest as qemu-bin-ref
 
 # To be able to build 'arm' images on Travis (which is x64 based), it is mandatory to explicitly reference the ${BUILD_ARCH} image
-FROM ${BUILD_ARCH}/alpine:3.8
-# ARG BUILD_ARCH line was duplicated on purpose: "An ARG declared before a FROM is outside of a build stage, so it can’t be used in any instruction after a FROM."
-# See https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
-ARG BUILD_ARCH
-ARG QEMU_ARCH
-# COPY tmp/qemu-arm-static /usr/bin/qemu-arm-static
-# ADD https://github.com/multiarch/qemu-user-static/releases/download/v2.9.1-1/qemu-arm-static /usr/bin/qemu-arm-static
-COPY --from=qemu-bin-ref /usr/bin/qemu-${QEMU_ARCH}-static /usr/bin/qemu-${QEMU_ARCH}-static
+FROM ${BUILD_ARCH}python:2-alpine3.11
+# FROM ${BUILD_ARCH}python:3.6.10-alpine3.11
+# To find latest alpine version, see https://hub.docker.com/_/alpine?tab=description
 
-# Inspired from https://github.com/simonqbs-dockerfiles/arm-pgadmin4
-ENV PYTHONDONTWRITEBYTECODE=1
-
-RUN \
-	apk add --no-cache python python-dev py-pip postgresql-dev
-
-# Install postgresql tools for backup/restore
-RUN apk add --no-cache postgresql \
- && cp /usr/bin/psql /usr/bin/pg_dump /usr/bin/pg_dumpall /usr/bin/pg_restore /usr/local/bin/ \
- && apk del postgresql
-
-ENV VERSION=3.0
-
-RUN apk add --no-cache alpine-sdk postgresql-dev \
- && pip install --upgrade pip \
- && echo "https://ftp.postgresql.org/pub/pgadmin/pgadmin4/v${VERSION}/pip/pgadmin4-${VERSION}-py2.py3-none-any.whl" | pip install --no-cache-dir -r /dev/stdin \
- && apk del alpine-sdk \
- && addgroup -g 50 -S pgadmin \
+# create a non-privileged user to use at runtime
+RUN addgroup -g 50 -S pgadmin \
  && adduser -D -S -h /pgadmin -s /sbin/nologin -u 1000 -G pgadmin pgadmin \
  && mkdir -p /pgadmin/config /pgadmin/storage \
  && chown -R 1000:50 /pgadmin
 
-EXPOSE 5050
+# Install postgresql tools for backup/restore
+RUN apk add --no-cache libedit postgresql \
+ && cp /usr/bin/psql /usr/bin/pg_dump /usr/bin/pg_dumpall /usr/bin/pg_restore /usr/local/bin/ \
+ && apk del postgresql
 
-COPY LICENSE config_local.py /usr/lib/python2.7/site-packages/pgadmin4/
+RUN apk add --no-cache postgresql-dev libffi-dev
+
+# See https://www.pgadmin.org/download/pgadmin-4-python-wheel/
+ENV PGADMIN_VERSION=4.21
+ENV PYTHONDONTWRITEBYTECODE=1
+
+RUN apk add --no-cache alpine-sdk linux-headers \
+ && pip install --upgrade pip \
+ && echo "https://ftp.postgresql.org/pub/pgadmin/pgadmin4/v${PGADMIN_VERSION}/pip/pgadmin4-${PGADMIN_VERSION}-py2.py3-none-any.whl" | pip install --no-cache-dir -r /dev/stdin \
+ && apk del alpine-sdk linux-headers
+
+# Next line is important because it is parsed by the Makefile...
+ARG PYTHON_VERSION=2.7
+COPY LICENSE config_distro.py /usr/local/lib/python2.7/site-packages/pgadmin4/
 
 USER pgadmin:pgadmin
-CMD [ "python", "./usr/lib/python2.7/site-packages/pgadmin4/pgAdmin4.py" ]
+CMD ["python", "./usr/local/lib/python2.7/site-packages/pgadmin4/pgAdmin4.py"]
 VOLUME /pgadmin/
+
+EXPOSE 5050
 
 ARG BUILD_DATE
 ARG VCS_REF
