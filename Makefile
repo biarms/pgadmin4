@@ -2,9 +2,6 @@ SHELL = bash
 # .ONESHELL:
 # .SHELLFLAGS = -e
 # See https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: default all build circleci-local-build check-binaries check-buildx check-docker-login docker-login-if-possible buildx-prepare prepare install-qemu uninstall-qemu \
-        buildx check build-all-images build-all-one-image build-all-one-image-arm32v7build-all-one-image-arm64v8 build-all-one-image-amd64 create-and-push-manifests checkout \
-        build-one-image test-one-image tag-one-image push-one-image rmi-one-image rebuild-one-image
 
 # DOCKER_REGISTRY: Nothing, or 'registry:5000/'
 DOCKER_REGISTRY ?= docker.io/
@@ -17,6 +14,9 @@ BETA_VERSION ?=
 DOCKER_IMAGE_NAME = biarms/pgadmin4
 DOCKER_IMAGE_VERSION = $(shell grep "ENV PGADMIN_VERSION" Dockerfile | sed 's/.*=//';)
 PYTHON_VERSION = $(shell grep "ARG PYTHON_VERSION" Dockerfile | sed 's/.*=//';)
+DOCKER_IMAGE_VERSION = 4.21
+# GITHUB_TAG = REL-4_21
+# PYTHON_VERSION = 3.6
 DOCKER_IMAGE_TAGNAME = ${DOCKER_REGISTRY}${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}${BETA_VERSION}
 # See https://www.gnu.org/software/make/manual/html_node/Shell-Function.html
 # BUILD_DATE=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -26,23 +26,31 @@ VCS_REF=$(shell git rev-parse --short HEAD)
 
 PLATFORM ?= linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64
 
+.PHONY: default
 default: all
 
 # 2 builds are implemented: build and buildx (for the fun)
+.PHONY: all
 all: all-build
 
+.PHONY: all-buildx
 all-buildx: check-docker-login buildx uninstall-qemu
 
+.PHONY: all-build
 all-build: check-docker-login test build create-and-push-manifests uninstall-qemu
 
+.PHONY: build
 build: build-all-images
 
+.PHONY: test
 test: test-all-images
 
 # Launch a local build as on circleci, that will call the default target, but inside the 'circleci build and test env'
+.PHONY: circleci-local-build
 circleci-local-build: check-docker-login
 	@ circleci local execute -e DOCKER_USERNAME="${DOCKER_USERNAME}" -e DOCKER_PASSWORD="${DOCKER_PASSWORD}"
 
+.PHONY: check-binaries
 check-binaries:
 	@ which docker > /dev/null || (echo "Please install docker before using this script" && exit 1)
 	@ which git > /dev/null || (echo "Please install git before using this script" && exit 2)
@@ -56,6 +64,7 @@ check-binaries:
 	# Next line will fail if docker server can't be contacted
 	docker version
 
+.PHONY: check-docker-login
 check-docker-login: check-binaries
 	@ if [[ "${DOCKER_USERNAME}" == "" ]]; then \
 	    echo "DOCKER_USERNAME and DOCKER_PASSWORD env variables are mandatory for this kind of build"; \
@@ -66,21 +75,26 @@ check-docker-login: check-binaries
 	    exit -1; \
 	  fi
 
+.PHONY: docker-login-if-possible
 docker-login-if-possible: check-binaries
 	if [[ ! "${DOCKER_USERNAME}" == "" ]]; then echo "${DOCKER_PASSWORD}" | docker login --username "${DOCKER_USERNAME}" --password-stdin; fi
 
 # Test are qemu based. SHOULD_DO: use `docker buildx bake`. See https://github.com/docker/buildx#buildx-bake-options-target
+.PHONY: install-qemu
 install-qemu: check-binaries
 	# @ # From https://github.com/multiarch/qemu-user-static:
 	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
-uninstall-qemu: check-binaries
+.PHONY: install-qemu
+uninstall-qemu: uninstall-qemu
 	docker run --rm --privileged multiarch/qemu-user-static:register --reset
 
 # See https://docs.docker.com/buildx/working-with-buildx/
+.PHONY: check-buildx
 check-buildx: check-binaries
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx version
 
+.PHONY: buildx-prepare
 buildx-prepare: install-qemu check-buildx
 	DOCKER_CLI_EXPERIMENTAL=enabled docker context create buildx-multi-arch-context || true
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create buildx-multi-arch-context --name=buildx-multi-arch || true
@@ -88,25 +102,39 @@ buildx-prepare: install-qemu check-buildx
 	# Debug info
 	@ echo "DOCKER_IMAGE_TAGNAME: ${DOCKER_IMAGE_TAGNAME}"
 
+#.PHONY: checkout
+#checkout: check-binaries
+#	git clone https://github.com/postgres/pgadmin4 git-src || true
+#	cd git-src && git checkout tags/$(GITHUB_TAG)
+
+.PHONY: buildx
 buildx: docker-login-if-possible buildx-prepare checkout
+	# cd git-src && \
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --progress plain -f Dockerfile --push --platform "${PLATFORM}" --tag "$(DOCKER_REGISTRY)${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}${BETA_VERSION}" --build-arg VERSION="${DOCKER_IMAGE_VERSION}" --build-arg VCS_REF="${VCS_REF}" --build-arg BUILD_DATE="${BUILD_DATE}" .
+	# cd git-src && \
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --progress plain -f Dockerfile --push --platform "${PLATFORM}" --tag "$(DOCKER_REGISTRY)${DOCKER_IMAGE_NAME}:latest${BETA_VERSION}" --build-arg VERSION="${DOCKER_IMAGE_VERSION}" --build-arg VCS_REF="${VCS_REF}" --build-arg BUILD_DATE="${BUILD_DATE}" .
 
 # build-all-one-image-arm32v6 => manifest for arm32v6/php:7.4-apache not found
+.PHONY: build-all-images
 build-all-images: build-all-one-image-amd64 build-all-one-image-arm64v8 build-all-one-image-arm32v7 build-all-one-image-arm32v6
 
+.PHONY: build-all-one-image-arm32v6
 build-all-one-image-arm32v6:
 	ARCH=arm32v6 LINUX_ARCH=armv6l  make build-all-one-image
 
+.PHONY: build-all-one-image-arm32v7
 build-all-one-image-arm32v7:
 	ARCH=arm32v7 LINUX_ARCH=armv7l  make build-all-one-image
 
+.PHONY: build-all-one-image-arm64v8
 build-all-one-image-arm64v8:
 	ARCH=arm64v8 LINUX_ARCH=aarch64 make build-all-one-image
 
+.PHONY: build-all-one-image-amd64
 build-all-one-image-amd64:
 	ARCH=amd64   LINUX_ARCH=x86_64  make build-all-one-image
 
+.PHONY: create-and-push-manifests
 create-and-push-manifests: #ideally, should reference 'build-all-images', but that's boring when we test this script...
 	# biarms/phpmyadmin:x.y.z
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create --amend "${DOCKER_REGISTRY}${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}${BETA_VERSION}" "${DOCKER_REGISTRY}${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}-linux-arm32v7${BETA_VERSION}" "${DOCKER_REGISTRY}${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}-linux-arm64v8${BETA_VERSION}" "${DOCKER_REGISTRY}${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}-linux-amd64${BETA_VERSION}"
@@ -124,18 +152,23 @@ create-and-push-manifests: #ideally, should reference 'build-all-images', but th
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push "${DOCKER_REGISTRY}${DOCKER_IMAGE_NAME}:latest${BETA_VERSION}"
 
 # Fails with: "standard_init_linux.go:211: exec user process caused "no such file or directory"" if qemu is not installed...
+.PHONY: test-all-images
 test-all-images: test-arm32v6 test-arm32v7 test-arm64v8 test-amd64
 	echo "All tests are OK :)"
 
+.PHONY: test-arm32v6
 test-arm32v6:
 	ARCH=arm32v6 LINUX_ARCH=armv6l DOCKER_IMAGE_VERSION=$(DOCKER_IMAGE_VERSION) make test-one-image
 
+.PHONY: test-arm32v7
 test-arm32v7:
 	ARCH=arm32v7 LINUX_ARCH=armv7l DOCKER_IMAGE_VERSION=$(DOCKER_IMAGE_VERSION) make test-one-image
 
+.PHONY: test-arm64v8
 test-arm64v8:
 	ARCH=arm64v8 LINUX_ARCH=aarch64 DOCKER_IMAGE_VERSION=$(DOCKER_IMAGE_VERSION) make test-one-image
 
+.PHONY: test-amd64
 test-amd64:
 	ARCH=amd64 LINUX_ARCH=x86_64 DOCKER_IMAGE_VERSION=$(DOCKER_IMAGE_VERSION) make test-one-image
 
@@ -153,16 +186,18 @@ test-amd64:
 # | arm32v7 |   armv7l   |
 # | arm64v8 |   aarch64  |
 # |---------|------------|
-ARCH ?= arm64v8
-LINUX_ARCH ?= aarch64
+ARCH ?=
+LINUX_ARCH ?=
 BUILD_ARCH = $(ARCH)/
 MULTI_ARCH_DOCKER_IMAGE_TAGNAME = ${DOCKER_REGISTRY}${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}-linux-${ARCH}${BETA_VERSION}
 
 ## Multi-arch targets
 
 # Actually, the 'push' will only be done is DOCKER_USERNAME is set and not empty !
+.PHONY: build-all-one-image
 build-all-one-image: build-one-image test-one-image push-one-image
 
+.PHONY: check
 check: check-binaries
 	@ if [[ "$(ARCH)" == "" ]]; then \
 	    echo 'ARCH is $(ARCH) (MUST BE SET !)' && \
@@ -183,12 +218,19 @@ check: check-binaries
 	# Debug info
 	@ echo "MULTI_ARCH_DOCKER_IMAGE_TAGNAME: ${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}"
 
+.PHONY: prepare
 prepare: check install-qemu
 
-build-one-image: checkout prepare
+.PHONY: build-one-image
+build-one-image: prepare #checkout prepare
+	#cp git-src/Dockerfile git-src/Dockerfile-orig
+	#cp .dockerignore git-src/.
+	#cp Dockerfile git-src/.
+	#cd git-src && \
 	docker build -t "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" --build-arg VERSION="${DOCKER_IMAGE_VERSION}" --build-arg VCS_REF="${VCS_REF}" --build-arg BUILD_DATE="${BUILD_DATE}" --build-arg BUILD_ARCH="${BUILD_ARCH}" ${DOCKER_FILE} .
-	rm -rf docker
 
+# Won't be OK with official images
+.PHONY: run-smoke-tests
 run-smoke-tests: prepare
 	# Smoke tests:
 	docker run --rm "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" /bin/echo "Success." | grep "Success"
@@ -205,19 +247,25 @@ run-smoke-tests: prepare
 	docker run --rm "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" pip --version
  	# | grep 'pip 20.1.1'
 
+.PHONY: pgadmin4-tc-01
 pgadmin4-tc-01: prepare
 	# Search for 'Starting pgAdmin 4. Please navigate to http://0.0.0.0:5050 in your browser.' in the logs
 	# Test Case 1: test that the server starts
 	docker stop pgadmin4-tc-01 || true
 	docker rm pgadmin4-tc-01 || true
+	# # With the 'official images', PGADMIN_DEFAULT_EMAIL and PGADMIN_DEFAULT_PASSWORD params are mandatory
+	# docker create --name pgadmin4-tc-01 -e PGADMIN_DEFAULT_EMAIL=a -e PGADMIN_DEFAULT_PASSWORD=b ${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}
 	docker create --name pgadmin4-tc-01 ${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}
 	docker start pgadmin4-tc-01
-	# This TC implements a fail fast algorithm: the container as 10 second to start and 120 to be ready...
+	# This TC implements a fail fast algorithm: the container as 10 seconds to start and 120 seconds to be ready:
+	# 1. Search for a message similar to "NOTE: Configuring authentication for [SERVER-DESKTOP] mode" that must come in less than 10 seconds
+	# 2. Search for a "Starting pgAdmin 4. Please navigate...5050" like message that must come in less than 120 seconds
+	###  2. Search for a "[INFO] Listening at: http://[::]:80" like message that must come in less than 120 seconds
 	i=0 ;\
 	timeout=10 ;\
 	while ! (docker logs pgadmin4-tc-01 2>&1 | grep 'Starting pgAdmin 4. Please navigate' | grep '5050') ; do \
        i=$$[$$i+1] ;\
-       if (docker logs pgadmin4-tc-01 2>&1 | grep -q 'Configuring authentication for DESKTOP mode') ; then \
+       if (docker logs pgadmin4-tc-01 2>&1 | grep -q 'Configuring authentication for') ; then \
 		  timeout=120 ;\
        fi ;\
        if [ $$i -gt $$timeout ]; then \
@@ -231,14 +279,18 @@ pgadmin4-tc-01: prepare
 	docker stop pgadmin4-tc-01
 	docker rm pgadmin4-tc-01
 
+.PHONY: test-one-image
 test-one-image: build-one-image run-smoke-tests pgadmin4-tc-01
 
+.PHONY: push-one-image
 push-one-image: check docker-login-if-possible
 	# push only is 'DOCKER_USERNAME' (and hopefully DOCKER_PASSWORD) are set:
 	if [[ ! "${DOCKER_USERNAME}" == "" ]]; then docker push "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}"; fi
 
 # Helper targets
+.PHONY: rmi-one-image
 rmi-one-image: check
 	docker rmi -f "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}"
 
+.PHONY: rebuild-one-image
 rebuild-one-image: rmi-one-image build-one-image

@@ -1,0 +1,5 @@
+*
+!/docs/
+!/web/
+!/requirements.txt
+!/pkg/docker/
