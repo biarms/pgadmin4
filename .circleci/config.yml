@@ -40,7 +40,7 @@ jobs:
       - setup_remote_docker:
           version: 19.03.8 # Max supported version was found on https://circleci.com/docs/2.0/building-docker-images/
       - checkout
-      - run: echo BETA_VERSION='-beta-circleci' make buildx
+      - run: make buildx
 workflows:
   version: 2
   tests_and_publish:
@@ -55,3 +55,6 @@ workflows:
             - test-arm32v7
             - test-arm64v8
             - test-amd64
+          filters:
+            branches:
+              only: master
