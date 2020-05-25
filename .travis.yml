@@ -1,6 +1,6 @@
-language: bash
-
-dist: bionic # On 20/05/2020, focal is still not listed on https://docs.travis-ci.com/user/reference/overview/ :(
+os: linux
+dist: bionic # On 20/05/2020, focal is still not listed on https://docs.travis-ci.com/user/reference/overview/, and Xenial 16.04 is always the default :(
+language: shell
 
 # https://docs.travis-ci.com/user/customizing-the-build#git-clone-depth
 git:
