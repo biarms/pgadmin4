@@ -10,6 +10,9 @@ env:
   - DOCKER_CLI_EXPERIMENTAL=enabled
 
 before_install:
+  # Skip every build (build will be done by CircleCI, because of TravisCI timeout)
+  - echo "Travis build is disabled because of build timeout issue. The official build is therefore CircleCI for this project."
+  - travis_terminate 0
   - sudo rm -rf /var/lib/apt/lists/*
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
   - lsb_release -cs
@@ -40,11 +43,6 @@ jobs:
       env: MAKE_TARGET="test-amd64"
     - name: "buildx"
       env: MAKE_TARGET="buildx"
-
-# Skip every build (build will be done by CircleCI, because of TravisCI timeout)
-before_install:
-  - echo "Travis build is disabled because of build timeout issue. The official build is therefore CircleCI for this project."
-  - travis_terminate 0
 
 # before_script: travis_terminate 0
 
