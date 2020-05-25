@@ -42,7 +42,9 @@ jobs:
       env: MAKE_TARGET="buildx"
 
 # Skip every build (build will be done by CircleCI, because of TravisCI timeout)
-before_install: travis_terminate 0
+before_install:
+  - echo: "Travis build is disabled because of build timeout issue. The official build is therefore CircleCI for this project."
+  - travis_terminate 0
 
 # before_script: travis_terminate 0
 
