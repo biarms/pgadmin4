@@ -253,9 +253,9 @@ pgadmin4-tc-01: prepare
 	# Test Case 1: test that the server starts
 	docker stop pgadmin4-tc-01 || true
 	docker rm pgadmin4-tc-01 || true
-	# # With the 'official images', PGADMIN_DEFAULT_EMAIL and PGADMIN_DEFAULT_PASSWORD params are mandatory
-	# docker create --name pgadmin4-tc-01 -e PGADMIN_DEFAULT_EMAIL=a -e PGADMIN_DEFAULT_PASSWORD=b ${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}
-	docker create --name pgadmin4-tc-01 ${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}
+	# With the 'official images', PGADMIN_DEFAULT_EMAIL and PGADMIN_DEFAULT_PASSWORD params are mandatory
+	docker create --name pgadmin4-tc-01 -e PGADMIN_DEFAULT_EMAIL=a -e PGADMIN_DEFAULT_PASSWORD=b ${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}
+	# docker create --name pgadmin4-tc-01 ${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}
 	docker start pgadmin4-tc-01
 	# This TC implements a fail fast algorithm: the container as 10 seconds to start and 120 seconds to be ready:
 	# 1. Search for a message similar to "NOTE: Configuring authentication for [SERVER-DESKTOP] mode" that must come in less than 10 seconds
@@ -263,7 +263,7 @@ pgadmin4-tc-01: prepare
 	###  2. Search for a "[INFO] Listening at: http://[::]:80" like message that must come in less than 120 seconds
 	i=0 ;\
 	timeout=10 ;\
-	while ! (docker logs pgadmin4-tc-01 2>&1 | grep '[INFO] Listening at: http://' | grep '80') ; do \
+	while ! (docker logs pgadmin4-tc-01 2>&1 | grep 'Listening at: http://' | grep '80') ; do \
        i=$$[$$i+1] ;\
        if (docker logs pgadmin4-tc-01 2>&1 | grep -q 'Configuring authentication for') ; then \
 		  timeout=120 ;\
