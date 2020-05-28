@@ -280,7 +280,7 @@ pgadmin4-tc-01: prepare
 	docker rm pgadmin4-tc-01
 
 .PHONY: test-one-image
-test-one-image: build-one-image run-smoke-tests pgadmin4-tc-01
+test-one-image: build-one-image pgadmin4-tc-01
 
 .PHONY: push-one-image
 push-one-image: check docker-login-if-possible
