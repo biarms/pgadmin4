@@ -12,11 +12,11 @@ DOCKER_PASSWORD ?=
 # BETA_VERSION: Nothing, or '-beta-123'
 BETA_VERSION ?=
 DOCKER_IMAGE_NAME = biarms/pgadmin4
-DOCKER_IMAGE_VERSION = $(shell grep "ENV PGADMIN_VERSION" Dockerfile | sed 's/.*=//';)
-PYTHON_VERSION = $(shell grep "ARG PYTHON_VERSION" Dockerfile | sed 's/.*=//';)
-# DOCKER_IMAGE_VERSION = 4.18
-# GITHUB_TAG = REL-4_21
-# PYTHON_VERSION = 3.6
+#DOCKER_IMAGE_VERSION = $(shell grep "ENV PGADMIN_VERSION" Dockerfile | sed 's/.*=//';)
+#PYTHON_VERSION = $(shell grep "ARG PYTHON_VERSION" Dockerfile | sed 's/.*=//';)
+DOCKER_IMAGE_VERSION = 4.21
+GITHUB_TAG = REL-4_21
+PYTHON_VERSION = 3.6
 DOCKER_IMAGE_TAGNAME = ${DOCKER_REGISTRY}${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}${BETA_VERSION}
 # See https://www.gnu.org/software/make/manual/html_node/Shell-Function.html
 # BUILD_DATE=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -104,14 +104,14 @@ buildx-prepare: install-qemu check-buildx
 
 #.PHONY: checkout
 checkout: check-binaries
-#	git clone https://github.com/postgres/pgadmin4 git-src || true
-#	cd git-src && git checkout tags/$(GITHUB_TAG)
+	git clone https://github.com/postgres/pgadmin4 git-src || true
+	cd git-src && git checkout tags/$(GITHUB_TAG)
 
 .PHONY: buildx
 buildx: docker-login-if-possible buildx-prepare checkout
-	# cd git-src && \
+	cd git-src && \
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --progress plain -f Dockerfile --push --platform "${PLATFORM}" --tag "$(DOCKER_REGISTRY)${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}${BETA_VERSION}" --build-arg VERSION="${DOCKER_IMAGE_VERSION}" --build-arg VCS_REF="${VCS_REF}" --build-arg BUILD_DATE="${BUILD_DATE}" .
-	# cd git-src && \
+	cd git-src && \
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --progress plain -f Dockerfile --push --platform "${PLATFORM}" --tag "$(DOCKER_REGISTRY)${DOCKER_IMAGE_NAME}:latest${BETA_VERSION}" --build-arg VERSION="${DOCKER_IMAGE_VERSION}" --build-arg VCS_REF="${VCS_REF}" --build-arg BUILD_DATE="${BUILD_DATE}" .
 
 # build-all-one-image-arm32v6 => manifest for arm32v6/php:7.4-apache not found
@@ -222,12 +222,11 @@ check: check-binaries
 prepare: check install-qemu
 
 .PHONY: build-one-image
-build-one-image: prepare #checkout prepare
-	#cp git-src/Dockerfile git-src/Dockerfile-orig
-	#cp .dockerignore git-src/.
-	#cp Dockerfile git-src/.
-	#cd git-src && \
-	#
+build-one-image: checkout prepare
+	cp git-src/Dockerfile git-src/Dockerfile-orig
+	cp .dockerignore git-src/.
+	cp Dockerfile git-src/.
+	cd git-src && \
 	docker build -t "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" --build-arg VERSION="${DOCKER_IMAGE_VERSION}" --build-arg VCS_REF="${VCS_REF}" --build-arg BUILD_DATE="${BUILD_DATE}" --build-arg BUILD_ARCH="${BUILD_ARCH}" ${DOCKER_FILE} .
 
 # Won't be OK with official images
@@ -264,7 +263,7 @@ pgadmin4-tc-01: prepare
 	###  2. Search for a "[INFO] Listening at: http://[::]:80" like message that must come in less than 120 seconds
 	i=0 ;\
 	timeout=10 ;\
-	while ! (docker logs pgadmin4-tc-01 2>&1 | grep 'Starting pgAdmin 4. Please navigate' | grep '5050') ; do \
+	while ! (docker logs pgadmin4-tc-01 2>&1 | grep '[INFO] Listening at: http://' | grep '80') ; do \
        i=$$[$$i+1] ;\
        if (docker logs pgadmin4-tc-01 2>&1 | grep -q 'Configuring authentication for') ; then \
 		  timeout=120 ;\
