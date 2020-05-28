@@ -4,7 +4,8 @@ ARG BUILD_ARCH
 # FROM biarms/qemu-bin:latest as qemu-bin-ref
 
 # To be able to build 'arm' images on Travis (which is x64 based), it is mandatory to explicitly reference the ${BUILD_ARCH} image
-FROM ${BUILD_ARCH}python:2-alpine3.11
+FROM ${BUILD_ARCH}python:3.8-alpine
+# First python 3 release was inspired by https://github.com/thaJeztah/pgadmin4-docker/pull/48/commits/53f422e20aed3f067ca2b1d02f26099c00e8cd39
 # FROM ${BUILD_ARCH}python:3.6.10-alpine3.11
 # To find latest alpine version, see https://hub.docker.com/_/alpine?tab=description
 
@@ -22,20 +23,24 @@ RUN apk add --no-cache libedit postgresql \
 RUN apk add --no-cache postgresql-dev libffi-dev
 
 # See https://www.pgadmin.org/download/pgadmin-4-python-wheel/
-ENV PGADMIN_VERSION=4.21
+# ENV PGADMIN_VERSION=4.21
+# TODO
+ENV PGADMIN_VERSION=4.18
 ENV PYTHONDONTWRITEBYTECODE=1
 
+## && pip install --no-cache-dir --upgrade Flask-WTF==0.14.3 \ => see https://github.com/thaJeztah/pgadmin4-docker/pull/48/commits/53f422e20aed3f067ca2b1d02f26099c00e8cd39
 RUN apk add --no-cache alpine-sdk linux-headers \
  && pip install --upgrade pip \
  && echo "https://ftp.postgresql.org/pub/pgadmin/pgadmin4/v${PGADMIN_VERSION}/pip/pgadmin4-${PGADMIN_VERSION}-py2.py3-none-any.whl" | pip install --no-cache-dir -r /dev/stdin \
+ && pip install --no-cache-dir --upgrade Flask-WTF==0.14.3 \
  && apk del alpine-sdk linux-headers
 
 # Next line is important because it is parsed by the Makefile...
-ARG PYTHON_VERSION=2.7
-COPY LICENSE config_distro.py /usr/local/lib/python2.7/site-packages/pgadmin4/
+ARG PYTHON_VERSION=3.8
+COPY LICENSE config_distro.py /usr/local/lib/python3.8/site-packages/pgadmin4/
 
 USER pgadmin:pgadmin
-CMD ["python", "./usr/local/lib/python2.7/site-packages/pgadmin4/pgAdmin4.py"]
+CMD ["python", "./usr/local/lib/python3.8/site-packages/pgadmin4/pgAdmin4.py"]
 VOLUME /pgadmin/
 
 EXPOSE 5050

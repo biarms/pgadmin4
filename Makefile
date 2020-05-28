@@ -14,7 +14,7 @@ BETA_VERSION ?=
 DOCKER_IMAGE_NAME = biarms/pgadmin4
 DOCKER_IMAGE_VERSION = $(shell grep "ENV PGADMIN_VERSION" Dockerfile | sed 's/.*=//';)
 PYTHON_VERSION = $(shell grep "ARG PYTHON_VERSION" Dockerfile | sed 's/.*=//';)
-DOCKER_IMAGE_VERSION = 4.21
+DOCKER_IMAGE_VERSION = 4.18
 # GITHUB_TAG = REL-4_21
 # PYTHON_VERSION = 3.6
 DOCKER_IMAGE_TAGNAME = ${DOCKER_REGISTRY}${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}${BETA_VERSION}
@@ -79,7 +79,7 @@ check-docker-login: check-binaries
 docker-login-if-possible: check-binaries
 	if [[ ! "${DOCKER_USERNAME}" == "" ]]; then echo "${DOCKER_PASSWORD}" | docker login --username "${DOCKER_USERNAME}" --password-stdin; fi
 
-# Test are qemu based. SHOULD_DO: use `docker buildx bake`. See https://github.com/docker/buildx#buildx-bake-options-target
+# Test are qemu based. SHOULD_DO - use 'docker buildx bake'. See https://github.com/docker/buildx#buildx-bake-options-target
 .PHONY: install-qemu
 install-qemu: check-binaries
 	# @ # From https://github.com/multiarch/qemu-user-static:
@@ -227,6 +227,7 @@ build-one-image: prepare #checkout prepare
 	#cp .dockerignore git-src/.
 	#cp Dockerfile git-src/.
 	#cd git-src && \
+	#
 	docker build -t "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" --build-arg VERSION="${DOCKER_IMAGE_VERSION}" --build-arg VCS_REF="${VCS_REF}" --build-arg BUILD_DATE="${BUILD_DATE}" --build-arg BUILD_ARCH="${BUILD_ARCH}" ${DOCKER_FILE} .
 
 # Won't be OK with official images
