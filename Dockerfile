@@ -23,9 +23,7 @@ RUN apk add --no-cache libedit postgresql \
 RUN apk add --no-cache postgresql-dev libffi-dev
 
 # See https://www.pgadmin.org/download/pgadmin-4-python-wheel/
-# ENV PGADMIN_VERSION=4.21
-# TODO
-ENV PGADMIN_VERSION=4.18
+ENV PGADMIN_VERSION=4.21
 ENV PYTHONDONTWRITEBYTECODE=1
 
 ## && pip install --no-cache-dir --upgrade Flask-WTF==0.14.3 \ => see https://github.com/thaJeztah/pgadmin4-docker/pull/48/commits/53f422e20aed3f067ca2b1d02f26099c00e8cd39
