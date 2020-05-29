@@ -104,9 +104,16 @@ buildx-prepare: install-qemu check-buildx
 
 #.PHONY: checkout
 checkout: check-binaries
+	# clone the official git repo locally, and don't fail is the local folder already exist
 	git clone https://github.com/postgres/pgadmin4 git-src || true
-	git fetch --tags
-	cd git-src && git checkout tags/$(GITHUB_TAG)
+	# Ensure to get the latest tags references locally
+	cd "git-src/" && git fetch --tags
+	# Remove git untracked directories in addition to untracked files.
+	cd "git-src/" && git clean -d -f
+	# Revert any modifications done in this folder (typically, the update of the original Dockerfile)
+	cd "git-src/" && git checkout -- *
+	# Checkout the relevant tag
+	cd "git-src/" && git checkout tags/$(GITHUB_TAG)
 
 .PHONY: buildx
 buildx: docker-login-if-possible buildx-prepare checkout
@@ -226,13 +233,18 @@ prepare: check install-qemu
 build-one-image: checkout prepare
 	cp git-src/Dockerfile git-src/Dockerfile-orig
 	cp .dockerignore git-src/.
-	cp Dockerfile git-src/.
+	# cp Dockerfile git-src/.
+	echo "ARG BUILD_ARCH" > git-src/Dockerfile
+	echo "" >> git-src/Dockerfile
+	sed 's/FROM\ /FROM\ \$$\{BUILD_ARCH\}/' git-src/Dockerfile-orig >> git-src/Dockerfile
+	# diff git-src/Dockerfile git-src/Dockerfile-orig
 	cd git-src && \
 	docker build -t "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" --build-arg VERSION="${DOCKER_IMAGE_VERSION}" --build-arg VCS_REF="${VCS_REF}" --build-arg BUILD_DATE="${BUILD_DATE}" --build-arg BUILD_ARCH="${BUILD_ARCH}" ${DOCKER_FILE} .
 
-# Won't be OK with official images
 .PHONY: run-smoke-tests
 run-smoke-tests: prepare
+	# With the 'official images', PGADMIN_DEFAULT_EMAIL and PGADMIN_DEFAULT_PASSWORD params are mandatory
+	docker create --name pgadmin4-smock-tests -e PGADMIN_DEFAULT_EMAIL=a -e PGADMIN_DEFAULT_PASSWORD=b ${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}
 	# Smoke tests:
 	docker run --rm "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" /bin/echo "Success." | grep "Success"
 	docker run --rm "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" uname -a
