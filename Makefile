@@ -14,8 +14,8 @@ BETA_VERSION ?=
 DOCKER_IMAGE_NAME = biarms/pgadmin4
 #DOCKER_IMAGE_VERSION = $(shell grep "ENV PGADMIN_VERSION" Dockerfile | sed 's/.*=//';)
 #PYTHON_VERSION = $(shell grep "ARG PYTHON_VERSION" Dockerfile | sed 's/.*=//';)
-DOCKER_IMAGE_VERSION = 4.21
-GITHUB_TAG = REL-4_21
+DOCKER_IMAGE_VERSION = 4.22
+GITHUB_TAG = REL-4_22
 PYTHON_VERSION = 3.6
 DOCKER_IMAGE_TAGNAME = ${DOCKER_REGISTRY}${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}${BETA_VERSION}
 # See https://www.gnu.org/software/make/manual/html_node/Shell-Function.html
@@ -105,6 +105,7 @@ buildx-prepare: install-qemu check-buildx
 #.PHONY: checkout
 checkout: check-binaries
 	git clone https://github.com/postgres/pgadmin4 git-src || true
+	git fetch --tags
 	cd git-src && git checkout tags/$(GITHUB_TAG)
 
 .PHONY: buildx
