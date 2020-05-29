@@ -23,7 +23,7 @@ RUN apk add --no-cache libedit postgresql \
 RUN apk add --no-cache postgresql-dev libffi-dev
 
 # See https://www.pgadmin.org/download/pgadmin-4-python-wheel/
-ENV PGADMIN_VERSION=4.21
+ENV PGADMIN_VERSION=4.22
 ENV PYTHONDONTWRITEBYTECODE=1
 
 RUN apk add --no-cache alpine-sdk linux-headers \
