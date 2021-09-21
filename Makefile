@@ -234,11 +234,11 @@ build-one-image: checkout prepare
 	cp git-src/Dockerfile git-src/Dockerfile-orig
 	cp .dockerignore git-src/.
 	# cp Dockerfile git-src/.
-	echo "ARG BUILD_ARCH" > git-src/Dockerfile
-	echo "" >> git-src/Dockerfile
-	cat git-src/Dockerfile-orig >> git-src/Dockerfile
-	sed -i 's/FROM\ alpine/FROM\ \$$\{BUILD_ARCH\}alpine/' git-src/Dockerfile-orig
-	sed -i 's/FROM\ postgres/FROM\ \$$\{BUILD_ARCH\}postgres/' git-src/Dockerfile
+	echo "ARG BUILD_ARCH" > git-src/Dockerfile.tmp
+	echo "" >> git-src/Dockerfile.tmp
+	cat git-src/Dockerfile-orig >> git-src/Dockerfile.tmp
+	sed 's/FROM\ alpine/FROM\ \$$\{BUILD_ARCH\}alpine/' git-src/Dockerfile.tmp > git-src/Dockerfile.tmp2
+	sed 's/FROM\ postgres/FROM\ \$$\{BUILD_ARCH\}postgres/' git-src/Dockerfile.tmp2 > git-src/Dockerfile
 	# diff git-src/Dockerfile git-src/Dockerfile-orig
 	cd git-src && \
 	docker build -t "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" --build-arg VERSION="${DOCKER_IMAGE_VERSION}" --build-arg VCS_REF="${VCS_REF}" --build-arg BUILD_DATE="${BUILD_DATE}" --build-arg BUILD_ARCH="${BUILD_ARCH}" ${DOCKER_FILE} .
