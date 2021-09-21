@@ -6,7 +6,7 @@ jobs:
       - image: biarms/docker-toolbox:0.0.2
     steps:
       - setup_remote_docker:
-          version: 19.03.8 # Max supported version was found on https://circleci.com/docs/2.0/building-docker-images/
+          version: 19.03.13 # Max supported version was found on https://circleci.com/docs/2.0/building-docker-images/
       - checkout
       - run: BETA_VERSION='-beta-circleci' make test-arm32v6
   test-arm32v7:
@@ -14,7 +14,7 @@ jobs:
       - image: biarms/docker-toolbox:0.0.2
     steps:
       - setup_remote_docker:
-          version: 19.03.8 # Max supported version was found on https://circleci.com/docs/2.0/building-docker-images/
+          version: 19.03.13 # Max supported version was found on https://circleci.com/docs/2.0/building-docker-images/
       - checkout
       - run: BETA_VERSION='-beta-circleci' make test-arm32v7
   test-arm64v8:
@@ -22,7 +22,7 @@ jobs:
       - image: biarms/docker-toolbox:0.0.2
     steps:
       - setup_remote_docker:
-          version: 19.03.8 # Max supported version was found on https://circleci.com/docs/2.0/building-docker-images/
+          version: 19.03.13 # Max supported version was found on https://circleci.com/docs/2.0/building-docker-images/
       - checkout
       - run: BETA_VERSION='-beta-circleci' make test-arm64v8
   test-amd64:
@@ -30,7 +30,7 @@ jobs:
       - image: biarms/docker-toolbox:0.0.2
     steps:
       - setup_remote_docker:
-          version: 19.03.8 # Max supported version was found on https://circleci.com/docs/2.0/building-docker-images/
+          version: 19.03.13 # Max supported version was found on https://circleci.com/docs/2.0/building-docker-images/
       - checkout
       - run: BETA_VERSION='-beta-circleci' make test-amd64
   publish:
@@ -38,7 +38,7 @@ jobs:
       - image: biarms/docker-toolbox:0.0.2
     steps:
       - setup_remote_docker:
-          version: 19.03.8 # Max supported version was found on https://circleci.com/docs/2.0/building-docker-images/
+          version: 19.03.13 # Max supported version was found on https://circleci.com/docs/2.0/building-docker-images/
       - checkout
       - run: make buildx
 workflows:
