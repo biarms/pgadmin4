@@ -246,7 +246,7 @@ build-one-image: checkout prepare
 .PHONY: run-smoke-tests
 run-smoke-tests: prepare
 	# With the 'official images', PGADMIN_DEFAULT_EMAIL and PGADMIN_DEFAULT_PASSWORD params are mandatory
-	docker create --name pgadmin4-smock-tests -e PGADMIN_DEFAULT_EMAIL=a -e PGADMIN_DEFAULT_PASSWORD=b ${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}
+	docker create --name pgadmin4-smock-tests -e PGADMIN_DEFAULT_EMAIL=test@email.com -e PGADMIN_DEFAULT_PASSWORD=password ${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}
 	# Smoke tests:
 	docker run --rm "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" /bin/echo "Success." | grep "Success"
 	docker run --rm "${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}" uname -a
