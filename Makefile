@@ -269,7 +269,7 @@ pgadmin4-tc-01: prepare
 	docker stop pgadmin4-tc-01 || true
 	docker rm pgadmin4-tc-01 || true
 	# With the 'official images', PGADMIN_DEFAULT_EMAIL and PGADMIN_DEFAULT_PASSWORD params are mandatory
-	docker create --name pgadmin4-tc-01 -e PGADMIN_DEFAULT_EMAIL=a -e PGADMIN_DEFAULT_PASSWORD=b ${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}
+	docker create --name pgadmin4-tc-01 -e PGADMIN_DEFAULT_EMAIL=test@email.com -e PGADMIN_DEFAULT_PASSWORD=password ${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}
 	# docker create --name pgadmin4-tc-01 ${MULTI_ARCH_DOCKER_IMAGE_TAGNAME}
 	docker start pgadmin4-tc-01
 	# This TC implements a fail fast algorithm: the container as 10 seconds to start and 120 seconds to be ready:
